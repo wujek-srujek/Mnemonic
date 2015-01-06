@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Mnemonic</string>
+    <string name="action_choose_file">Choose file</string>
+
+</resources>

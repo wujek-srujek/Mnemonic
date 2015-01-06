@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
+        <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
+    </style>
+
+    <style name="MnemonicToolbarStyle" parent="android:Widget.Toolbar">
+        <item name="android:background">?android:colorPrimary</item>
+    </style>
+
+</resources>
