@@ -18,3 +18,7 @@ android {
         }
     }
 }
+
+dependencies {
+    compile 'com.nononsenseapps:filepicker:1.1.2'
+}

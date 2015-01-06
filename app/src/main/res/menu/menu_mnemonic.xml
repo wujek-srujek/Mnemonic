@@ -4,6 +4,8 @@
       tools:context="com.mnemonic.MnemonicActivity">
 
     <item
+        android:icon="@drawable/ic_action_directory"
+        android:onClick="chooseDirectory"
         android:orderInCategory="100"
         android:showAsAction="ifRoom"
         android:title="@string/action_choose_file"/>

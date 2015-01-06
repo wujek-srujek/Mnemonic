@@ -23,6 +23,10 @@
 
         </activity>
 
+        <activity
+            android:name="com.nononsenseapps.filepicker.FilePickerActivity"
+            android:theme="@style/MnemonicFilePickerTheme"/>
+
     </application>
 
 </manifest>
