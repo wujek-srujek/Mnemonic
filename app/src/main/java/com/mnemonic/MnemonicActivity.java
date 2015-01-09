@@ -9,7 +9,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.nononsenseapps.filepicker.FilePickerActivity;
@@ -28,6 +31,23 @@ public class MnemonicActivity extends Activity {
 
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        ((ListView) findViewById(R.id.test_list)).setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Test test = (Test) parent.getItemAtPosition(position);
+                if (test.isEmpty()) {
+                    Toast.makeText(MnemonicActivity.this,
+                            String.format(getString(R.string.empty_test_format), test.getName()), Toast.LENGTH_SHORT)
+                            .show();
+                } else {
+                    Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
+                    intent.putExtra(TestActivity.TEST_EXTRA, test);
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
     @Override

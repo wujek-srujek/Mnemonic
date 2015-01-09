@@ -2,9 +2,10 @@ package com.mnemonic;
 
 
 import java.io.File;
+import java.io.Serializable;
 
 
-public class Test {
+public class Test implements Serializable {
 
     private final String name;
 
@@ -42,6 +43,10 @@ public class Test {
 
     public int getLastLineNumber() {
         return lastLineNumber;
+    }
+
+    public boolean isEmpty() {
+        return firstLineNumber == lastLineNumber;
     }
 
     @Override

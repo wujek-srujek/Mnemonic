@@ -36,7 +36,7 @@ public class TestParser {
                     if (line.startsWith("#")) {
                         ++firstLineNumber;
                         String header = line.substring(1).trim();
-                        String[] tokens = header.split("\\w*=\\w*", 2);
+                        String[] tokens = CommonConstants.SPLITTER_PATTERN.split(header, 2);
                         switch (tokens.length) {
                             case 1:
                                 name = tokens[0].trim();
