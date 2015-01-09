@@ -3,5 +3,6 @@
 
     <string name="app_name">Mnemonic</string>
     <string name="action_choose_file">Choose file</string>
+    <string name="default_test_name_format">&lt;Test %d&gt;</string>
 
 </resources>

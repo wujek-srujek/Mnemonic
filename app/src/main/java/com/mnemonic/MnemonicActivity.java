@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 import android.widget.Toolbar;
 
 import com.nononsenseapps.filepicker.FilePickerActivity;
 
 import java.io.File;
+import java.util.List;
 
 
 public class MnemonicActivity extends Activity {
@@ -76,5 +78,8 @@ public class MnemonicActivity extends Activity {
     }
 
     private void initializeTests(String filePath) {
+        ListView testList = (ListView) findViewById(R.id.test_list);
+        List<Test> tests = new TestParser().parse(new File(filePath), getString(R.string.default_test_name_format));
+        testList.setAdapter(new TestListAdapter(this, tests));
     }
 }

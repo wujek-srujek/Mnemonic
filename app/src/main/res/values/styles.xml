@@ -3,6 +3,7 @@
 
     <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
+        <item name="textAppearanceExtraLarge">@style/MnemonicTextAppearance.ExtraLarge</item>
     </style>
 
     <style name="MnemonicToolbarStyle" parent="android:Widget.Toolbar">
@@ -10,5 +11,9 @@
     </style>
 
     <style name="MnemonicFilePickerTheme" parent="android:Theme.Material"/>
+
+    <style name="MnemonicTextAppearance.ExtraLarge" parent="android:TextAppearance.Large">
+        <item name="android:textSize">25sp</item>
+    </style>
 
 </resources>
