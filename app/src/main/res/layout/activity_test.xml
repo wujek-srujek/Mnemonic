@@ -5,10 +5,9 @@
                 android:layout_height="match_parent"
                 tools:context="com.mnemonic.TestActivity">
 
-    <Toolbar
+    <include
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        layout="@layout/toolbar_snippet"/>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/task_pager"
