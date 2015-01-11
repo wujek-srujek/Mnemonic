@@ -2,5 +2,6 @@
 <resources>
 
     <attr name="textAppearanceExtraLarge" format="reference"/>
+    <attr name="floatingActionButtonStyle" format="reference"/>
 
 </resources>

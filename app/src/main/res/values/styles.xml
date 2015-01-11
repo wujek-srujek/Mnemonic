@@ -4,10 +4,17 @@
     <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
         <item name="textAppearanceExtraLarge">@style/MnemonicTextAppearance.ExtraLarge</item>
+        <item name="floatingActionButtonStyle">@style/MnemonicFabStyle</item>
+    </style>
+
+    <style name="MnemonicFabStyle" parent="android:Widget.ImageButton">
+        <item name="android:background">@drawable/ripple</item>
+        <item name="android:elevation">4dp</item>
     </style>
 
     <style name="MnemonicToolbarStyle" parent="android:Widget.Toolbar">
-        <item name="android:background">?android:colorPrimary</item>
+        <item name="android:background">?android:attr/colorPrimary</item>
+        <item name="android:elevation">2dp</item>
     </style>
 
     <style name="MnemonicFilePickerTheme" parent="android:Theme.Material"/>
