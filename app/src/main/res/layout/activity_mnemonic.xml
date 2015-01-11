@@ -17,4 +17,14 @@
         android:layout_below="@id/toolbar"
         android:scrollbars="vertical"/>
 
+    <TextView
+        android:id="@+id/empty_test_list_info_label"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:gravity="center"
+        android:text="@string/empty_test_list_warning"
+        android:textAppearance="?attr/textAppearanceExtraLarge"
+        android:visibility="gone"/>
+
 </RelativeLayout>

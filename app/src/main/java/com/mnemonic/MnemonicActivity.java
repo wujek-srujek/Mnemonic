@@ -68,7 +68,7 @@ public class MnemonicActivity extends Activity {
             editor.putString(LAST_FILE_PATH_KEY, filePath);
             editor.apply();
 
-            initializeTests(filePath);
+            initialize(filePath);
         }
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -79,9 +79,7 @@ public class MnemonicActivity extends Activity {
         super.onResume();
 
         String filePath = getPreferences(Context.MODE_PRIVATE).getString(LAST_FILE_PATH_KEY, null);
-        if (filePath != null) {
-            initializeTests(filePath);
-        }
+        initialize(filePath);
     }
 
     public void chooseDirectory(MenuItem item) {
@@ -100,8 +98,17 @@ public class MnemonicActivity extends Activity {
         startActivityForResult(intent, 0);
     }
 
-    private void initializeTests(String filePath) {
-        List<Test> tests = new TestParser().parse(new File(filePath), getString(R.string.default_test_name_format));
-        testList.setAdapter(new TestListAdapter(this, tests));
+    private void initialize(String filePath) {
+        List<Test> tests = filePath != null ? new TestParser().parse(new File(filePath), getString(R.string.default_test_name_format)) : null;
+        View infoLabel = findViewById(R.id.empty_test_list_info_label);
+        if (tests != null && !tests.isEmpty()) {
+            testList.setVisibility(View.VISIBLE);
+            infoLabel.setVisibility(View.GONE);
+
+            testList.setAdapter(new TestListAdapter(this, tests));
+        } else {
+            testList.setVisibility(View.GONE);
+            infoLabel.setVisibility(View.VISIBLE);
+        }
     }
 }
