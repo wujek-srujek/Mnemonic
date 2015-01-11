@@ -25,6 +25,8 @@ public class MnemonicActivity extends Activity {
 
     private final static String LAST_FILE_PATH_KEY = "lastFile";
 
+    private ListView testList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +34,8 @@ public class MnemonicActivity extends Activity {
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        ((ListView) findViewById(R.id.test_list)).setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        testList = (ListView) findViewById(R.id.test_list);
+        testList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -98,7 +101,6 @@ public class MnemonicActivity extends Activity {
     }
 
     private void initializeTests(String filePath) {
-        ListView testList = (ListView) findViewById(R.id.test_list);
         List<Test> tests = new TestParser().parse(new File(filePath), getString(R.string.default_test_name_format));
         testList.setAdapter(new TestListAdapter(this, tests));
     }

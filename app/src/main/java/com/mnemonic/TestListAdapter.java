@@ -26,9 +26,9 @@ public class TestListAdapter extends ArrayAdapter<Test> {
         final TextView descriptionTextView;
 
         TestItemViewHolder(View itemView, int viewType) {
-            this.nameTextView = (TextView) itemView.findViewById(R.id.test_list_item_name);
+            this.nameTextView = (TextView) itemView.findViewById(R.id.test_list_item_name_label);
             this.descriptionTextView = viewType == DEFAULT_VIEW_TYPE ?
-                    (TextView) itemView.findViewById(R.id.test_list_item_description) : null;
+                    (TextView) itemView.findViewById(R.id.test_list_item_desc_label) : null;
         }
     }
 

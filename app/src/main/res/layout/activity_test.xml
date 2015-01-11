@@ -11,9 +11,29 @@
         android:layout_height="wrap_content"/>
 
     <android.support.v4.view.ViewPager
-        android:id="@+id/pager"
+        android:id="@+id/task_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar"/>
+
+    <TextView
+        android:id="@+id/empty_test_info_label"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:gravity="center"
+        android:text="@string/empty_test_warning"
+        android:textAppearance="?attr/textAppearanceExtraLarge"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/restart_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="@dimen/padding_big"
+        android:layout_marginEnd="@dimen/padding_big"
+        android:text="@string/action_restart"/>
 
 </RelativeLayout>

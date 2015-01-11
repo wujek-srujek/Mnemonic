@@ -8,5 +8,7 @@
     <string name="question">Question</string>
     <string name="answer">Answer</string>
     <string name="task_info_format">%1$s %2$d / %3$d</string>
+    <string name="empty_test_warning">This test contains no tasks, please choose another one</string>
+    <string name="action_restart">Restart</string>
 
 </resources>
