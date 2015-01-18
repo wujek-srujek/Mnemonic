@@ -60,12 +60,15 @@ public final class Db {
 
         public static final String FAVORITE = "favorite";
 
+        public static final String COMMENT = "comment";
+
         static final String _CREATE_TABLE = "create table " + _TABLE_NAME + " (" +
                 _ID + " integer primary key, " +
                 _TEST_ID + " integer not null references " + Test._TABLE_NAME + " on delete cascade, " +
                 QUESTION + " text not null, " +
                 ANSWER + " text, " +
-                FAVORITE + " integer not null default 0)";
+                FAVORITE + " integer not null default 0, " +
+                COMMENT + " text)";
     }
 
     private Db() {

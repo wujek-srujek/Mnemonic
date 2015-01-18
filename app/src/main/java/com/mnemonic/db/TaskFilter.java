@@ -15,6 +15,13 @@ public enum TaskFilter {
         public String getFilterCondition() {
             return Db.Task.FAVORITE + "=1";
         }
+    },
+
+    COMMENTED {
+        @Override
+        public String getFilterCondition() {
+            return Db.Task.COMMENT + " is not null";
+        }
     };
 
     public abstract String getFilterCondition();

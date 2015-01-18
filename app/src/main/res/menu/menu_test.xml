@@ -4,9 +4,16 @@
       tools:context="com.mnemonic.TestActivity">
 
     <item
+        android:id="@+id/test_menu_comment"
+        android:onClick="editComment"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_edit_comment"/>
+
+    <item
         android:icon="@drawable/ic_action_restart"
         android:onClick="restartTest"
-        android:orderInCategory="100"
+        android:orderInCategory="200"
         android:showAsAction="ifRoom"
         android:title="@string/action_restart_test"/>
 

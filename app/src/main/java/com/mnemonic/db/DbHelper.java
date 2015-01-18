@@ -24,6 +24,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String SET_TASK_FAVORITE = String.format(SET_TASK_DATA_FORMAT, Db.Task.FAVORITE);
 
+    private static final String SET_TASK_COMMENT = String.format(SET_TASK_DATA_FORMAT, Db.Task.COMMENT);
+
     private static final String SELECT_TEST_GROUPS = "select * from " + Db.TestGroup._TABLE_NAME +
             " order by " + Db.TestGroup._ID + " desc";
 
@@ -35,13 +37,16 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String TEST_HAS_FAVORITE_CHECK =
             String.format(TEST_PROPERTY_CHECK, TaskFilter.FAVORITE.getFilterCondition(), Db.Task.FAVORITE);
 
+    private static final String TEST_HAS_COMMENTED_CHECK =
+            String.format(TEST_PROPERTY_CHECK, TaskFilter.COMMENTED.getFilterCondition(), Db.Task.COMMENT);
+
     private static final String SELECT_TESTS_FOR_GROUP = "select test.*, (select count(*) from " +
             Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " + Db.Task._COUNT + ", " +
-            TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._TEST_GROUP_ID +
-            "=? order by test." + Db.Test._ID + " asc";
+            TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK + " from " + Db.Test._TABLE_NAME +
+            " as test where test." + Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
 
-    private static final String SELECT_TEST_FOR_ID = "select " + TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME
-            + " as test where test." + Db.Test._ID + "=?";
+    private static final String SELECT_TEST_FOR_ID = "select " + TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK +
+            " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._ID + "=?";
 
     private static final String SELECT_TASKS_FOR_TEST_FORMAT = "select * from " + Db.Task._TABLE_NAME + " where " +
             Db.Task._TEST_ID + "=? and %s order by " + Db.Task._ID + " asc";
@@ -118,7 +123,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Test._TABLE_NAME, null, values);
 
-        return new Test(_id, name, description, 0, false);
+        return new Test(_id, name, description, 0, false, false);
     }
 
     public Task addTask(Test test, String question, String answer) {
@@ -131,12 +136,17 @@ public class DbHelper extends SQLiteOpenHelper {
 
         ++test.taskCount;
 
-        return new Task(_id, question, answer, false);
+        return new Task(_id, question, answer, false, null);
     }
 
     public void setFavorite(Task task, boolean favorite) {
         getWritableDatabase().execSQL(SET_TASK_FAVORITE, new String[]{"" + (favorite ? 1 : 0), "" + task._id});
         task.favorite = favorite;
+    }
+
+    public void setComment(Task task, String comment) {
+        getWritableDatabase().execSQL(SET_TASK_COMMENT, new String[]{comment, "" + task._id});
+        task.comment = comment;
     }
 
     public List<TestGroup> getTestGroups() {
@@ -171,8 +181,9 @@ public class DbHelper extends SQLiteOpenHelper {
             String description = cursor.getString(cursor.getColumnIndex(Db.Test.DESCRIPTION));
             int taskCount = cursor.getInt(cursor.getColumnIndex(Db.Task._COUNT));
             boolean hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
+            boolean hasCommented = cursor.getInt(cursor.getColumnIndex(Db.Task.COMMENT)) != 0;
 
-            tests.add(new Test(_id, name, description, taskCount, hasFavorite));
+            tests.add(new Test(_id, name, description, taskCount, hasFavorite, hasCommented));
         }
         cursor.close();
 
@@ -183,6 +194,7 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_FOR_ID, new String[]{"" + test._id});
         cursor.moveToNext();
         test.hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
+        test.hasCommented = cursor.getInt(cursor.getColumnIndex(Db.Task.COMMENT)) != 0;
         cursor.close();
     }
 
@@ -195,8 +207,9 @@ public class DbHelper extends SQLiteOpenHelper {
             String question = cursor.getString(cursor.getColumnIndex(Db.Task.QUESTION));
             String answer = cursor.getString(cursor.getColumnIndex(Db.Task.ANSWER));
             boolean favorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
+            String comment = cursor.getString(cursor.getColumnIndex(Db.Task.COMMENT));
 
-            tasks.add(new Task(_id, question, answer, favorite));
+            tasks.add(new Task(_id, question, answer, favorite, comment));
         }
         cursor.close();
 

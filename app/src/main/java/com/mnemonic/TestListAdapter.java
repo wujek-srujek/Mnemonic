@@ -32,6 +32,8 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
 
         final ImageView favoriteImage;
 
+        final ImageView commentedImage;
+
         Test test;
 
         TestItemViewHolder(View itemView, String defaultTestName, OnTestChoiceListener onTestChoiceListener) {
@@ -45,9 +47,11 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
             nameTextView = (TextView) itemView.findViewById(R.id.test_list_item_name_label);
             descriptionTextView = (TextView) itemView.findViewById(R.id.test_list_item_desc_label);
             favoriteImage = (ImageView) itemView.findViewById(R.id.test_list_item_favorite_image);
+            commentedImage = (ImageView) itemView.findViewById(R.id.test_list_item_commented_image);
 
             testItemView.setOnClickListener(this);
             favoriteImage.setOnClickListener(this);
+            commentedImage.setOnClickListener(this);
         }
 
         @Override
@@ -58,10 +62,13 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
                     taskFilter = TaskFilter.FAVORITE;
                     break;
 
+                case R.id.test_list_item_commented_image:
+                    taskFilter = TaskFilter.COMMENTED;
+                    break;
+
                 default:
                     taskFilter = TaskFilter.ALL;
                     break;
-
             }
 
             onTestChoiceListener.onTestChoice(new TestChoiceInfo(getPosition(), test, taskFilter));
@@ -80,6 +87,7 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
                 descriptionTextView.setText(null);
             }
             favoriteImage.setVisibility(test.hasFavorite() ? View.VISIBLE : View.GONE);
+            commentedImage.setVisibility(test.hasCommented() ? View.VISIBLE : View.GONE);
         }
     }
 

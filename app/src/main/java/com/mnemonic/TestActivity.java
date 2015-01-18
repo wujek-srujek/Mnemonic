@@ -30,8 +30,6 @@ public class TestActivity extends Activity {
 
     private final static String TASKS_BUNDLE_KEY = "tasks";
 
-    private final static String CURRENT_TASK_NUMBER_BUNDLE_KEY = "currentTaskNumber";
-
     private final static String IS_QUESTION_BUNDLE_KEY = "isQuestion";
 
     private final static String RANDOM_SEED_BUNDLE_KEY = "randomSeed";
@@ -43,8 +41,6 @@ public class TestActivity extends Activity {
     private ImageButton favoriteButton;
 
     private List<Task> orderedTasks;
-
-    private int currentTaskNumber;
 
     private boolean isQuestion;
 
@@ -74,7 +70,6 @@ public class TestActivity extends Activity {
 
         if (savedInstanceState != null) {
             // recreating the state after destroy in the background
-            currentTaskNumber = savedInstanceState.getInt(CURRENT_TASK_NUMBER_BUNDLE_KEY, 0);
             isQuestion = savedInstanceState.getBoolean(IS_QUESTION_BUNDLE_KEY, true);
             randomSeed = savedInstanceState.getLong(RANDOM_SEED_BUNDLE_KEY, 0);
         } else {
@@ -111,7 +106,6 @@ public class TestActivity extends Activity {
             @Override
             public void onPageSelected(int position) {
                 isQuestion = adapter.isQuestion(position);
-                currentTaskNumber = adapter.taskNumberForPosition(position);
 
                 updateTaskInfo();
             }
@@ -123,16 +117,37 @@ public class TestActivity extends Activity {
         });
 
         initPager();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
         updateTaskInfo();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+
         // returning false seems better here, but there is an issue which disables
         // the 'up' arrow navigation when false is returned, so just do it instead
         if (!orderedTasks.isEmpty()) {
             getMenuInflater().inflate(R.menu.menu_test, menu);
         }
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+
+        MenuItem commentMenuItem = menu.findItem(R.id.test_menu_comment);
+        commentMenuItem.setIcon(currentTask.getComment() != null ?
+                R.drawable.ic_action_comment : R.drawable.ic_action_no_comment);
 
         return true;
     }
@@ -148,7 +163,6 @@ public class TestActivity extends Activity {
         if (getIntent().getSerializableExtra(TASK_FILTER_EXTRA) != TaskFilter.ALL) {
             outState.putSerializable(TASKS_BUNDLE_KEY, new ArrayList<>(orderedTasks));
         }
-        outState.putInt(CURRENT_TASK_NUMBER_BUNDLE_KEY, currentTaskNumber);
         outState.putBoolean(IS_QUESTION_BUNDLE_KEY, isQuestion);
         outState.putLong(RANDOM_SEED_BUNDLE_KEY, randomSeed);
     }
@@ -157,12 +171,15 @@ public class TestActivity extends Activity {
         restartTest();
     }
 
+    public void editComment(MenuItem menuItem) {
+        editComment();
+    }
+
     public void toggleFavorite(View view) {
         toggleFavorite();
     }
 
     private void initBasicState() {
-        currentTaskNumber = 0;
         isQuestion = true;
         randomSeed = System.nanoTime();
     }
@@ -176,10 +193,13 @@ public class TestActivity extends Activity {
 
     private void updateTaskInfo() {
         String taskPart = getString(isQuestion ? R.string.question : R.string.answer);
-        String taskInfo = String.format(getString(R.string.task_info_format), taskPart, (currentTaskNumber) + 1, orderedTasks.size());
+        String taskInfo = String.format(getString(R.string.task_info_format), taskPart,
+                adapter.taskNumberForPosition(taskPager.getCurrentItem()) + 1, orderedTasks.size());
         getActionBar().setSubtitle(taskInfo);
 
-        updateFavoriteState();
+        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+        updateFavoriteState(currentTask);
+        invalidateOptionsMenu();
     }
 
     private void restartTest() {
@@ -188,16 +208,22 @@ public class TestActivity extends Activity {
         updateTaskInfo();
     }
 
+    private void editComment() {
+        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+        dbHelper.setComment(currentTask, currentTask.getComment() == null ? "test comment" : null);
+
+        invalidateOptionsMenu();
+    }
+
     private void toggleFavorite() {
         Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
         dbHelper.setFavorite(currentTask, !currentTask.isFavorite());
 
-        updateFavoriteState();
+        updateFavoriteState(currentTask);
     }
 
-    private void updateFavoriteState() {
-        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
-        favoriteButton.setImageResource(currentTask.isFavorite() ?
+    private void updateFavoriteState(Task task) {
+        favoriteButton.setImageResource(task.isFavorite() ?
                 R.drawable.ic_action_favorite : R.drawable.ic_action_not_favorite);
     }
 }
