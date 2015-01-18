@@ -20,7 +20,7 @@ public class Importer {
 
     private final static String COMMENT_MARKER = "#";
 
-    private final static Pattern SPLITTER_PATTERN = Pattern.compile("\\w*=\\w*");
+    private final static Pattern SPLITTER_PATTERN = Pattern.compile("\\s*=\\s*");
 
     private final DbHelper dbHelper;
 

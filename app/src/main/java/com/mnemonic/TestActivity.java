@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toolbar;
 
@@ -38,8 +40,6 @@ public class TestActivity extends Activity {
 
     private long randomSeed;
 
-    private List<Task> shuffledTasks;
-
     private TaskPagerAdapter adapter;
 
     @Override
@@ -52,16 +52,14 @@ public class TestActivity extends Activity {
         Test test = (Test) getIntent().getSerializableExtra(TEST_EXTRA);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setTitle(test.getName());
+        getActionBar().setTitle(test.getName() != null ? test.getName() : getString(R.string.default_test_name));
 
         orderedTasks = new DbHelper(this).getTasks(test);
 
         taskPager = (ViewPager) findViewById(R.id.task_pager);
-        View restartButton = findViewById(R.id.restart_button);
 
         if (orderedTasks.isEmpty()) {
             taskPager.setVisibility(View.GONE);
-            restartButton.setVisibility(View.GONE);
             findViewById(R.id.empty_test_info_label).setVisibility(View.VISIBLE);
             return;
         }
@@ -87,16 +85,6 @@ public class TestActivity extends Activity {
             }
         });
 
-        restartButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                initValues();
-                initPager();
-                updateTaskInfo();
-            }
-        });
-
         if (savedInstanceState != null) {
             // recreating the state after destroy in the background
             currentTaskNumber = savedInstanceState.getInt(CURRENT_TASK_NUMBER_BUNDLE_KEY, 0);
@@ -112,6 +100,17 @@ public class TestActivity extends Activity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // returning false seems better here, but there is an issue which disables
+        // the 'up' arrow navigation when false is returned, so just do it instead
+        if (!orderedTasks.isEmpty()) {
+            getMenuInflater().inflate(R.menu.menu_test, menu);
+        }
+
+        return true;
+    }
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
@@ -120,10 +119,8 @@ public class TestActivity extends Activity {
         outState.putLong(RANDOM_SEED_BUNDLE_KEY, randomSeed);
     }
 
-    private void updateTaskInfo() {
-        String taskPart = getString(isQuestion ? R.string.question : R.string.answer);
-        String taskInfo = String.format(getString(R.string.task_info_format), taskPart, (currentTaskNumber) + 1, shuffledTasks.size());
-        getActionBar().setSubtitle(taskInfo);
+    public void restartTest(MenuItem menuItem) {
+        restartTest();
     }
 
     private void initValues() {
@@ -133,9 +130,21 @@ public class TestActivity extends Activity {
     }
 
     private void initPager() {
-        shuffledTasks = new ArrayList<>(orderedTasks);
+        List<Task> shuffledTasks = new ArrayList<>(orderedTasks);
         Collections.shuffle(shuffledTasks, new Random(randomSeed));
         adapter = new TaskPagerAdapter(getLayoutInflater(), shuffledTasks);
         taskPager.setAdapter(adapter);
+    }
+
+    private void updateTaskInfo() {
+        String taskPart = getString(isQuestion ? R.string.question : R.string.answer);
+        String taskInfo = String.format(getString(R.string.task_info_format), taskPart, (currentTaskNumber) + 1, orderedTasks.size());
+        getActionBar().setSubtitle(taskInfo);
+    }
+
+    private void restartTest() {
+        initValues();
+        initPager();
+        updateTaskInfo();
     }
 }

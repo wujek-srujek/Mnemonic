@@ -72,8 +72,8 @@ public class MnemonicActivity extends Activity {
         }
     }
 
-    public void chooseDirectory(MenuItem menuItem) {
-        chooseDirectory();
+    public void browse(MenuItem menuItem) {
+        browse();
     }
 
     private void importTests(String filePath) {
@@ -115,7 +115,7 @@ public class MnemonicActivity extends Activity {
         }
     }
 
-    private void chooseDirectory() {
+    private void browse() {
         Intent intent = new Intent(this, FilePickerActivity.class);
         intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
