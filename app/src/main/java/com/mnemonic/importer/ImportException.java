@@ -1,0 +1,13 @@
+package com.mnemonic.importer;
+
+
+public class ImportException extends Exception {
+
+    public ImportException() {
+        super();
+    }
+
+    public ImportException(Throwable throwable) {
+        super(throwable);
+    }
+}

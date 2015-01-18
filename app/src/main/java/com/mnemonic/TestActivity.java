@@ -8,6 +8,10 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.Toolbar;
 
+import com.mnemonic.db.DbHelper;
+import com.mnemonic.db.Task;
+import com.mnemonic.db.Test;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +54,7 @@ public class TestActivity extends Activity {
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setTitle(test.getName());
 
-        orderedTasks = new TaskParser().parse(test.getFile(), test.getFirstLineNumber(), test.getLastLineNumber());
+        orderedTasks = new DbHelper(this).getTasks(test);
 
         taskPager = (ViewPager) findViewById(R.id.task_pager);
         View restartButton = findViewById(R.id.restart_button);

@@ -1,4 +1,4 @@
-package com.mnemonic;
+package com.mnemonic.view;
 
 
 import android.content.Context;
@@ -7,6 +7,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 import android.widget.ImageButton;
+
+import com.mnemonic.R;
 
 
 public class FloatingActionImageButton extends ImageButton {

@@ -2,11 +2,9 @@ package com.mnemonic;
 
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,15 +13,25 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import com.mnemonic.db.DbHelper;
+import com.mnemonic.db.Test;
+import com.mnemonic.db.TestGroup;
+import com.mnemonic.importer.ImportException;
+import com.mnemonic.importer.Importer;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class MnemonicActivity extends Activity {
 
-    private final static String LAST_FILE_PATH_KEY = "lastFile";
+    private static final String TAG = MnemonicActivity.class.getSimpleName();
+
+    private DbHelper dbHelper;
 
     private ListView testList;
 
@@ -34,23 +42,18 @@ public class MnemonicActivity extends Activity {
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
+        dbHelper = new DbHelper(this);
+
         testList = (ListView) findViewById(R.id.test_list);
         testList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Test test = (Test) parent.getItemAtPosition(position);
-                if (test.isEmpty()) {
-                    Toast.makeText(MnemonicActivity.this,
-                            String.format(getString(R.string.empty_test_format), test.getName()), Toast.LENGTH_SHORT)
-                            .show();
-                } else {
-                    Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
-                    intent.putExtra(TestActivity.TEST_EXTRA, test);
-                    startActivity(intent);
-                }
+                startTest((Test) parent.getItemAtPosition(position));
             }
         });
+
+        initUi();
     }
 
     @Override
@@ -63,52 +66,67 @@ public class MnemonicActivity extends Activity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
-            String filePath = data.getData().getPath();
-            SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
-            editor.putString(LAST_FILE_PATH_KEY, filePath);
-            editor.apply();
+            importTests(data.getData().getPath());
 
-            initialize(filePath);
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    public void chooseDirectory(MenuItem menuItem) {
+        chooseDirectory();
+    }
+
+    private void importTests(String filePath) {
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(filePath);
+            new Importer(dbHelper).importTests(filePath, inputStream);
+            initUi();
+        } catch (IOException | ImportException e) {
+            Log.e(TAG, "error importing data", e);
+            Toast.makeText(MnemonicActivity.this, R.string.import_error, Toast.LENGTH_LONG).show();
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException ignored) {
+                    // ignored
+                }
+            }
+        }
+    }
+
+    private void initUi() {
+        List<Test> tests = new ArrayList<>(dbHelper.getTestCount());
+        List<TestGroup> testGroups = dbHelper.getTestGroups();
+        for (TestGroup testGroup : testGroups) {
+            tests.addAll(dbHelper.getTests(testGroup));
         }
 
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        String filePath = getPreferences(Context.MODE_PRIVATE).getString(LAST_FILE_PATH_KEY, null);
-        initialize(filePath);
-    }
-
-    public void chooseDirectory(MenuItem item) {
-        String startPath = getPreferences(Context.MODE_PRIVATE).getString(LAST_FILE_PATH_KEY,
-                Environment.getExternalStorageDirectory().getAbsolutePath());
-        File startFile = new File(startPath);
-        if (startFile.isFile()) {
-            startPath = startFile.getParent();
-        }
-
-        Intent intent = new Intent(this, FilePickerActivity.class);
-        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-        intent.putExtra(FilePickerActivity.EXTRA_START_PATH, startPath);
-
-        startActivityForResult(intent, 0);
-    }
-
-    private void initialize(String filePath) {
-        List<Test> tests = filePath != null ? new TestParser().parse(new File(filePath), getString(R.string.default_test_name_format)) : null;
         View infoLabel = findViewById(R.id.empty_test_list_info_label);
-        if (tests != null && !tests.isEmpty()) {
+        if (!tests.isEmpty()) {
             testList.setVisibility(View.VISIBLE);
             infoLabel.setVisibility(View.GONE);
 
-            testList.setAdapter(new TestListAdapter(this, tests));
+            testList.setAdapter(new TestListAdapter(this, tests, getString(R.string.default_test_name)));
         } else {
             testList.setVisibility(View.GONE);
             infoLabel.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void chooseDirectory() {
+        Intent intent = new Intent(this, FilePickerActivity.class);
+        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
+        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+
+        startActivityForResult(intent, 0);
+    }
+
+    private void startTest(Test test) {
+        Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
+        intent.putExtra(TestActivity.TEST_EXTRA, test);
+
+        startActivity(intent);
     }
 }

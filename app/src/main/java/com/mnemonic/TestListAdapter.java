@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.mnemonic.db.Test;
+
 import java.util.List;
 
 
@@ -32,11 +34,14 @@ public class TestListAdapter extends ArrayAdapter<Test> {
         }
     }
 
+    private final String defaultTestName;
+
     private final LayoutInflater inflater;
 
-    public TestListAdapter(Context ctx, List<Test> tests) {
+    public TestListAdapter(Context ctx, List<Test> tests, String defaultTestName) {
         super(ctx, R.layout.test_list_item, tests);
 
+        this.defaultTestName = defaultTestName;
         inflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
@@ -67,7 +72,7 @@ public class TestListAdapter extends ArrayAdapter<Test> {
         }
 
         Test test = getItem(position);
-        holder.nameTextView.setText(test.getName());
+        holder.nameTextView.setText(test.getName() != null ? test.getName() : defaultTestName);
         if (viewType == DEFAULT_VIEW_TYPE) {
             holder.descriptionTextView.setText(test.getDescription());
         }

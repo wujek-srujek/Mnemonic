@@ -3,7 +3,8 @@
 
     <string name="app_name">Mnemonic</string>
     <string name="action_choose_file">Choose file</string>
-    <string name="default_test_name_format">&lt;Test %d&gt;</string>
+    <string name="default_test_name">&lt;Unnamed test&gt;</string>
+    <string name="import_error">Problems occurred, data not imported</string>
     <string name="empty_test_format">Test \'%s\' is empty</string>
     <string name="question">Question</string>
     <string name="answer">Answer</string>
