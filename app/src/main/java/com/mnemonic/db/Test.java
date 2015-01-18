@@ -12,10 +12,13 @@ public class Test implements Serializable {
 
     private final String description;
 
-    Test(long _id, String name, String description) {
+    private final boolean hasFavorite;
+
+    Test(long _id, String name, String description, boolean hasFavorite) {
         this._id = _id;
         this.name = name;
         this.description = description;
+        this.hasFavorite = hasFavorite;
     }
 
     public String getName() {
@@ -26,8 +29,13 @@ public class Test implements Serializable {
         return description;
     }
 
+    public boolean hasFavorite() {
+        return hasFavorite;
+    }
+
     @Override
     public String toString() {
-        return String.format("%s[name=%s, description=%s]", getClass().getSimpleName(), name, description);
+        return String.format("%s[name=%s, description=%s, hasFavorite=%b]",
+                getClass().getSimpleName(), name, description, hasFavorite);
     }
 }

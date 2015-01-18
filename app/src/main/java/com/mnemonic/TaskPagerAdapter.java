@@ -52,6 +52,10 @@ public class TaskPagerAdapter extends PagerAdapter {
         return view == object;
     }
 
+    public Task taskForPosition(int position) {
+        return tasks.get(taskNumberForPosition(position));
+    }
+
     public int taskNumberForPosition(int position) {
         return position / 2;
     }

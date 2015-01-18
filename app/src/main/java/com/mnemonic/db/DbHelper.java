@@ -20,16 +20,26 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final int DB_VERSION = 1;
 
+    private static final String SET_TASK_DATA_FORMAT = "update " + Db.Task._TABLE_NAME + " set %s=? where " + Db.Task._ID + "=?";
+
+    private static final String SET_TASK_FAVORITE = String.format(SET_TASK_DATA_FORMAT, Db.Task.FAVORITE);
+
     private static final String SELECT_TEST_GROUPS = "select * from " + Db.TestGroup._TABLE_NAME +
             " order by " + Db.TestGroup._ID + " desc";
 
     private static final String SELECT_TEST_COUNT = "select count(*) from " + Db.Test._TABLE_NAME;
 
-    private static final String SELECT_TESTS_FOR_GROUP = "select * from " + Db.Test._TABLE_NAME +
-            " where " + Db.Test._TEST_GROUP_ID + "=? order by " + Db.Test._ID + " asc";
+    private static final String TEST_PROPERTY_CHECK = "exists(select " + Db.Task._ID + " from " + Db.Task._TABLE_NAME +
+            " as task where task." + Db.Task._TEST_ID + "=test." + Db.Test._ID + " and task.%s limit 1) as %s";
 
-    private static final String SELECT_TASKS_FOR_TEST = "select * from " + Db.Task._TABLE_NAME + " where " +
-            Db.Task._TEST_ID + "=? order by " + Db.Task._ID + " asc";
+    private static final String TEST_HAS_FAVORITE_CHECK =
+            String.format(TEST_PROPERTY_CHECK, TaskFilter.FAVORITE.getFilterCondition(), Db.Task.FAVORITE);
+
+    private static final String SELECT_TESTS_FOR_GROUP = "select test.*, " + TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME
+            + " as test where test." + Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
+
+    private static final String SELECT_TASKS_FOR_TEST_FORMAT = "select * from " + Db.Task._TABLE_NAME + " where " +
+            Db.Task._TEST_ID + "=? and %s order by " + Db.Task._ID + " asc";
 
     private final Context context;
 
@@ -103,7 +113,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Test._TABLE_NAME, null, values);
 
-        return new Test(_id, name, description);
+        return new Test(_id, name, description, false);
     }
 
     public Task addTask(Test test, String question, String answer) {
@@ -114,12 +124,16 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Task._TABLE_NAME, null, values);
 
-        return new Task(_id, question, answer);
+        return new Task(_id, question, answer, false);
+    }
+
+    public void setFavorite(Task task, boolean favorite) {
+        getWritableDatabase().execSQL(SET_TASK_FAVORITE, new String[]{"" + (favorite ? 1 : 0), "" + task._id});
+        task.favorite = favorite;
     }
 
     public List<TestGroup> getTestGroups() {
         Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_GROUPS, null);
-
         List<TestGroup> testGroups = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
             long _id = cursor.getLong(cursor.getColumnIndex(Db.TestGroup._ID));
@@ -143,30 +157,31 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public List<Test> getTests(TestGroup testGroup) {
         Cursor cursor = getReadableDatabase().rawQuery(SELECT_TESTS_FOR_GROUP, new String[]{"" + testGroup._id});
-
         List<Test> tests = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
             long _id = cursor.getLong(cursor.getColumnIndex(Db.Test._ID));
             String name = cursor.getString(cursor.getColumnIndex(Db.Test.NAME));
             String description = cursor.getString(cursor.getColumnIndex(Db.Test.DESCRIPTION));
+            boolean hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
 
-            tests.add(new Test(_id, name, description));
+            tests.add(new Test(_id, name, description, hasFavorite));
         }
         cursor.close();
 
         return tests;
     }
 
-    public List<Task> getTasks(Test test) {
-        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TASKS_FOR_TEST, new String[]{"" + test._id});
-
+    public List<Task> getTasks(Test test, TaskFilter taskFilter) {
+        String query = String.format(SELECT_TASKS_FOR_TEST_FORMAT, taskFilter.getFilterCondition());
+        Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test._id});
         List<Task> tasks = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
             long _id = cursor.getLong(cursor.getColumnIndex(Db.Task._ID));
             String question = cursor.getString(cursor.getColumnIndex(Db.Task.QUESTION));
             String answer = cursor.getString(cursor.getColumnIndex(Db.Task.ANSWER));
+            boolean favorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
 
-            tasks.add(new Task(_id, question, answer));
+            tasks.add(new Task(_id, question, answer, favorite));
         }
         cursor.close();
 

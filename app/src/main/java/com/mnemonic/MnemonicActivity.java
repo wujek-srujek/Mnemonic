@@ -14,6 +14,7 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.mnemonic.db.DbHelper;
+import com.mnemonic.db.TaskFilter;
 import com.mnemonic.db.Test;
 import com.mnemonic.db.TestGroup;
 import com.mnemonic.importer.ImportException;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MnemonicActivity extends Activity {
+public class MnemonicActivity extends Activity implements TestStarter {
 
     private static final String TAG = MnemonicActivity.class.getSimpleName();
 
@@ -49,7 +50,7 @@ public class MnemonicActivity extends Activity {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startTest((Test) parent.getItemAtPosition(position));
+                startTest((Test) parent.getItemAtPosition(position), TaskFilter.ALL);
             }
         });
 
@@ -74,6 +75,15 @@ public class MnemonicActivity extends Activity {
 
     public void browse(MenuItem menuItem) {
         browse();
+    }
+
+    @Override
+    public void startTest(Test test, TaskFilter taskFilter) {
+        Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
+        intent.putExtra(TestActivity.TEST_EXTRA, test);
+        intent.putExtra(TestActivity.TASK_FILTER_EXTRA, taskFilter);
+
+        startActivity(intent);
     }
 
     private void importTests(String filePath) {
@@ -108,7 +118,7 @@ public class MnemonicActivity extends Activity {
             testList.setVisibility(View.VISIBLE);
             infoLabel.setVisibility(View.GONE);
 
-            testList.setAdapter(new TestListAdapter(this, tests, getString(R.string.default_test_name)));
+            testList.setAdapter(new TestListAdapter(this, tests, getString(R.string.default_test_name), this));
         } else {
             testList.setVisibility(View.GONE);
             infoLabel.setVisibility(View.VISIBLE);
@@ -121,12 +131,5 @@ public class MnemonicActivity extends Activity {
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
 
         startActivityForResult(intent, 0);
-    }
-
-    private void startTest(Test test) {
-        Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
-        intent.putExtra(TestActivity.TEST_EXTRA, test);
-
-        startActivity(intent);
     }
 }

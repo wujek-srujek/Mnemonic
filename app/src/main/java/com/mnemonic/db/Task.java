@@ -12,10 +12,13 @@ public class Task implements Serializable {
 
     private final String answer;
 
-    Task(long _id, String question, String answer) {
+    boolean favorite;
+
+    Task(long _id, String question, String answer, boolean favorite) {
         this._id = _id;
         this.question = question;
         this.answer = answer;
+        this.favorite = favorite;
     }
 
     public String getQuestion() {
@@ -26,10 +29,15 @@ public class Task implements Serializable {
         return answer;
     }
 
+    public boolean isFavorite() {
+        return favorite;
+    }
+
     @Override
     public String toString() {
-        return String.format("%s[question=%s, answer=%s]",
+        return String.format("%s[question=%s, answer=%s, favorite=%b]",
                 getClass().getSimpleName(), question.replaceAll("\n", "|"),
-                answer != null ? answer.replaceAll("\n", "|") : null);
+                answer != null ? answer.replaceAll("\n", "|") : null,
+                favorite);
     }
 }
