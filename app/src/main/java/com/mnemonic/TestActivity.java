@@ -70,7 +70,6 @@ public class TestActivity extends Activity {
             throw new IllegalStateException("must specify the filter using intent extra " + TASK_FILTER_EXTRA);
         }
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setTitle(test.getName() != null ? test.getName() : getString(R.string.default_test_name));
 
         if (savedInstanceState != null) {

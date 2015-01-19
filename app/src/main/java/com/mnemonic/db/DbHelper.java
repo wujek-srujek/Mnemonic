@@ -38,6 +38,9 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String SELECT_TESTS_FOR_GROUP = "select test.*, " + TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME
             + " as test where test." + Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
 
+    private static final String SELECT_TEST_FOR_ID = "select " + TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME
+            + " as test where test." + Db.Test._ID + "=?";
+
     private static final String SELECT_TASKS_FOR_TEST_FORMAT = "select * from " + Db.Task._TABLE_NAME + " where " +
             Db.Task._TEST_ID + "=? and %s order by " + Db.Task._ID + " asc";
 
@@ -169,6 +172,13 @@ public class DbHelper extends SQLiteOpenHelper {
         cursor.close();
 
         return tests;
+    }
+
+    public void refreshTest(Test test) {
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_FOR_ID, new String[]{"" + test._id});
+        cursor.moveToNext();
+        test.hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
+        cursor.close();
     }
 
     public List<Task> getTasks(Test test, TaskFilter taskFilter) {

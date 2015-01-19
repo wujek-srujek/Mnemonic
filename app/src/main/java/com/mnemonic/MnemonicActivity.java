@@ -4,17 +4,16 @@ package com.mnemonic;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.mnemonic.db.DbHelper;
-import com.mnemonic.db.TaskFilter;
 import com.mnemonic.db.Test;
 import com.mnemonic.db.TestGroup;
 import com.mnemonic.importer.ImportException;
@@ -28,13 +27,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MnemonicActivity extends Activity implements TestStarter {
+public class MnemonicActivity extends Activity implements OnTestChoiceListener {
 
     private static final String TAG = MnemonicActivity.class.getSimpleName();
 
     private DbHelper dbHelper;
 
-    private ListView testList;
+    private RecyclerView testList;
+
+    private TestChoiceInfo testChoiceInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,16 +46,24 @@ public class MnemonicActivity extends Activity implements TestStarter {
 
         dbHelper = new DbHelper(this);
 
-        testList = (ListView) findViewById(R.id.test_list);
-        testList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startTest((Test) parent.getItemAtPosition(position), TaskFilter.ALL);
-            }
-        });
+        testList = (RecyclerView) findViewById(R.id.test_list);
+        testList.setLayoutManager(new LinearLayoutManager(this));
 
         initUi();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (testChoiceInfo != null) {
+            // the test might have changed, e.g. all favorites may have
+            // been unchecked - need to refresh it
+            dbHelper.refreshTest(testChoiceInfo.test);
+            testList.getAdapter().notifyItemChanged(testChoiceInfo.position);
+
+            testChoiceInfo = null;
+        }
     }
 
     @Override
@@ -78,10 +87,12 @@ public class MnemonicActivity extends Activity implements TestStarter {
     }
 
     @Override
-    public void startTest(Test test, TaskFilter taskFilter) {
+    public void onTestChoice(TestChoiceInfo testChoiceInfo) {
+        this.testChoiceInfo = testChoiceInfo;
+
         Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
-        intent.putExtra(TestActivity.TEST_EXTRA, test);
-        intent.putExtra(TestActivity.TASK_FILTER_EXTRA, taskFilter);
+        intent.putExtra(TestActivity.TEST_EXTRA, testChoiceInfo.test);
+        intent.putExtra(TestActivity.TASK_FILTER_EXTRA, testChoiceInfo.taskFilter);
 
         startActivity(intent);
     }
@@ -118,7 +129,7 @@ public class MnemonicActivity extends Activity implements TestStarter {
             testList.setVisibility(View.VISIBLE);
             infoLabel.setVisibility(View.GONE);
 
-            testList.setAdapter(new TestListAdapter(this, tests, getString(R.string.default_test_name), this));
+            testList.setAdapter(new TestListAdapter(tests, getString(R.string.default_test_name), this));
         } else {
             testList.setVisibility(View.GONE);
             infoLabel.setVisibility(View.VISIBLE);

@@ -12,7 +12,7 @@ public class Test implements Serializable {
 
     private final String description;
 
-    private final boolean hasFavorite;
+    boolean hasFavorite;
 
     Test(long _id, String name, String description, boolean hasFavorite) {
         this._id = _id;
