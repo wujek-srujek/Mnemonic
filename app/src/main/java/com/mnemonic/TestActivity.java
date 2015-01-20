@@ -197,6 +197,7 @@ public class TestActivity extends Activity {
 
     private void updateFavoriteState() {
         Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
-        favoriteButton.setImageResource(currentTask.isFavorite() ? R.drawable.ic_favorite : R.drawable.ic_not_favorite);
+        favoriteButton.setImageResource(currentTask.isFavorite() ?
+                R.drawable.ic_action_favorite : R.drawable.ic_action_not_favorite);
     }
 }

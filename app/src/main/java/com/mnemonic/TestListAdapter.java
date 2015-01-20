@@ -24,6 +24,8 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
 
         final View testItemView;
 
+        final TextView taskCountTextView;
+
         final TextView nameTextView;
 
         final TextView descriptionTextView;
@@ -39,6 +41,7 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
             this.onTestChoiceListener = onTestChoiceListener;
 
             testItemView = itemView;
+            taskCountTextView = (TextView) itemView.findViewById(R.id.test_list_item_icon_count_label);
             nameTextView = (TextView) itemView.findViewById(R.id.test_list_item_name_label);
             descriptionTextView = (TextView) itemView.findViewById(R.id.test_list_item_desc_label);
             favoriteImage = (ImageView) itemView.findViewById(R.id.test_list_item_favorite_image);
@@ -67,6 +70,7 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
         public void bind(Test test) {
             this.test = test;
 
+            taskCountTextView.setText("" + test.getTaskCount());
             nameTextView.setText(test.getName() != null ? test.getName() : defaultTestName);
             if (test.getDescription() != null) {
                 descriptionTextView.setVisibility(View.VISIBLE);

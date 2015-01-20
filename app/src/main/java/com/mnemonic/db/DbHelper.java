@@ -35,8 +35,10 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String TEST_HAS_FAVORITE_CHECK =
             String.format(TEST_PROPERTY_CHECK, TaskFilter.FAVORITE.getFilterCondition(), Db.Task.FAVORITE);
 
-    private static final String SELECT_TESTS_FOR_GROUP = "select test.*, " + TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME
-            + " as test where test." + Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
+    private static final String SELECT_TESTS_FOR_GROUP = "select test.*, (select count(*) from " +
+            Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " + Db.Task._COUNT + ", " +
+            TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._TEST_GROUP_ID +
+            "=? order by test." + Db.Test._ID + " asc";
 
     private static final String SELECT_TEST_FOR_ID = "select " + TEST_HAS_FAVORITE_CHECK + " from " + Db.Test._TABLE_NAME
             + " as test where test." + Db.Test._ID + "=?";
@@ -116,7 +118,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Test._TABLE_NAME, null, values);
 
-        return new Test(_id, name, description, false);
+        return new Test(_id, name, description, 0, false);
     }
 
     public Task addTask(Test test, String question, String answer) {
@@ -126,6 +128,8 @@ public class DbHelper extends SQLiteOpenHelper {
         values.put(Db.Task.ANSWER, answer);
 
         long _id = getWritableDatabase().insertOrThrow(Db.Task._TABLE_NAME, null, values);
+
+        ++test.taskCount;
 
         return new Task(_id, question, answer, false);
     }
@@ -165,9 +169,10 @@ public class DbHelper extends SQLiteOpenHelper {
             long _id = cursor.getLong(cursor.getColumnIndex(Db.Test._ID));
             String name = cursor.getString(cursor.getColumnIndex(Db.Test.NAME));
             String description = cursor.getString(cursor.getColumnIndex(Db.Test.DESCRIPTION));
+            int taskCount = cursor.getInt(cursor.getColumnIndex(Db.Task._COUNT));
             boolean hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
 
-            tests.add(new Test(_id, name, description, hasFavorite));
+            tests.add(new Test(_id, name, description, taskCount, hasFavorite));
         }
         cursor.close();
 

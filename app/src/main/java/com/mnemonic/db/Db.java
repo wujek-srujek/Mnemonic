@@ -1,19 +1,20 @@
 package com.mnemonic.db;
 
 
+import android.provider.BaseColumns;
+
+
 public final class Db {
 
     public static final String NAME = "mnemonic";
 
-    public final static class TestGroup {
+    public final static class TestGroup implements BaseColumns {
 
         private TestGroup() {
             // nope
         }
 
         static final String _TABLE_NAME = "test_group";
-
-        static final String _ID = "_id";
 
         public static final String NAME = "name";
 
@@ -22,15 +23,13 @@ public final class Db {
                 NAME + " text)";
     }
 
-    public final static class Test {
+    public final static class Test implements BaseColumns {
 
         private Test() {
             // nope
         }
 
         static final String _TABLE_NAME = "test";
-
-        static final String _ID = "_id";
 
         static final String _TEST_GROUP_ID = "_test_group_id";
 
@@ -45,15 +44,13 @@ public final class Db {
                 DESCRIPTION + " text)";
     }
 
-    public final static class Task {
+    public final static class Task implements BaseColumns {
 
         private Task() {
             // nope
         }
 
         static final String _TABLE_NAME = "task";
-
-        static final String _ID = "_id";
 
         static final String _TEST_ID = "_test_id";
 
