@@ -3,7 +3,9 @@ package com.mnemonic;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -47,7 +49,10 @@ public class MnemonicActivity extends Activity implements OnTestChoiceListener {
         dbHelper = new DbHelper(this);
 
         testList = (RecyclerView) findViewById(R.id.test_list);
-        testList.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerView.LayoutManager layoutManager =
+                getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
+                        new LinearLayoutManager(this) : new GridLayoutManager(this, 2);
+        testList.setLayoutManager(layoutManager);
 
         initUi();
     }
