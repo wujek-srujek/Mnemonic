@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        apparently it is not possible to use things like '?android:attr/colorAccent'
+        in color state lists, so let's define the colors here; if the theme changes,
+        these will have to be updated as well
+    -->
+    <item android:color="#80CBC4" android:state_activated="true"/>
+    <item android:color="#FFFFFF"/>
+
+</selector>

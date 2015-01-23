@@ -1,10 +1,11 @@
 package com.mnemonic.db;
 
 
-import java.io.Serializable;
+import java.util.EnumSet;
+import java.util.Set;
 
 
-public class Test implements Serializable {
+public class Test {
 
     final long _id;
 
@@ -45,6 +46,18 @@ public class Test implements Serializable {
 
     public boolean hasCommented() {
         return hasCommented;
+    }
+
+    public Set<TaskFilter> availableTaskFilters() {
+        Set<TaskFilter> availableTaskFilters = EnumSet.of(TaskFilter.ALL);
+        if (hasFavorite) {
+            availableTaskFilters.add(TaskFilter.FAVORITE);
+        }
+        if (hasCommented) {
+            availableTaskFilters.add(TaskFilter.COMMENTED);
+        }
+
+        return availableTaskFilters;
     }
 
     @Override

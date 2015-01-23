@@ -3,6 +3,7 @@
 
     <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
+        <item name="android:windowActionModeOverlay">true</item>
         <item name="textAppearanceExtraLarge">@style/MnemonicTextAppearance.ExtraLarge</item>
         <item name="floatingActionButtonStyle">@style/MnemonicFabStyle</item>
     </style>

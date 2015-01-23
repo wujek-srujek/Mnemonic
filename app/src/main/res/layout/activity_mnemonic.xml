@@ -3,6 +3,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
                 tools:context="com.mnemonic.MnemonicActivity">
 
     <include
@@ -24,6 +25,18 @@
         android:gravity="center"
         android:text="@string/empty_test_list_warning"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        android:visibility="gone"/>
+
+    <com.mnemonic.view.FloatingActionImageButton
+        android:id="@+id/start_multitest_button"
+        android:layout_width="@dimen/fab_size"
+        android:layout_height="@dimen/fab_size"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="@dimen/padding_big"
+        android:layout_marginEnd="@dimen/padding_big"
+        android:onClick="startMultitest"
+        android:src="@drawable/ic_action_multitest"
         android:visibility="gone"/>
 
 </RelativeLayout>

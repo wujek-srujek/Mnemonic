@@ -2,6 +2,7 @@ package com.mnemonic;
 
 
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +17,7 @@ import java.util.List;
 
 public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestItemViewHolder> {
 
-    static class TestItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-        final String defaultTestName;
-
-        final OnTestChoiceListener onTestChoiceListener;
+    class TestItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         final View testItemView;
 
@@ -36,11 +33,8 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
 
         Test test;
 
-        TestItemViewHolder(View itemView, String defaultTestName, OnTestChoiceListener onTestChoiceListener) {
+        TestItemViewHolder(View itemView) {
             super(itemView);
-
-            this.defaultTestName = defaultTestName;
-            this.onTestChoiceListener = onTestChoiceListener;
 
             testItemView = itemView;
             taskCountTextView = (TextView) itemView.findViewById(R.id.test_list_item_icon_count_label);
@@ -50,28 +44,25 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
             commentedImage = (ImageView) itemView.findViewById(R.id.test_list_item_commented_image);
 
             testItemView.setOnClickListener(this);
+            testItemView.setOnLongClickListener(this);
+
             favoriteImage.setOnClickListener(this);
+            favoriteImage.setOnLongClickListener(this);
+
             commentedImage.setOnClickListener(this);
+            commentedImage.setOnLongClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            TaskFilter taskFilter;
-            switch (v.getId()) {
-                case R.id.test_list_item_favorite_image:
-                    taskFilter = TaskFilter.FAVORITE;
-                    break;
+            onTestClickListener.onTestClick(getPosition(), test, taskFilterForView(v));
+        }
 
-                case R.id.test_list_item_commented_image:
-                    taskFilter = TaskFilter.COMMENTED;
-                    break;
+        @Override
+        public boolean onLongClick(View v) {
+            onTestLongClickListener.onTestLongClick(getPosition(), test, taskFilterForView(v));
 
-                default:
-                    taskFilter = TaskFilter.ALL;
-                    break;
-            }
-
-            onTestChoiceListener.onTestChoice(new TestChoiceInfo(getPosition(), test, taskFilter));
+            return true;
         }
 
         public void bind(Test test) {
@@ -88,6 +79,47 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
             }
             favoriteImage.setVisibility(test.hasFavorite() ? View.VISIBLE : View.GONE);
             commentedImage.setVisibility(test.hasCommented() ? View.VISIBLE : View.GONE);
+
+            // reset any selections
+            nameTextView.setActivated(false);
+            favoriteImage.setActivated(false);
+            commentedImage.setActivated(false);
+
+            // mark the selection for the current test
+            TaskFilter taskFilter = getSelection(getPosition());
+            if (taskFilter != null) {
+                viewForTaskFilter(taskFilter).setActivated(true);
+            }
+        }
+
+        TaskFilter taskFilterForView(View view) {
+            switch (view.getId()) {
+                case R.id.test_list_item_favorite_image:
+                    return TaskFilter.FAVORITE;
+
+                case R.id.test_list_item_commented_image:
+                    return TaskFilter.COMMENTED;
+
+                case R.id.test_list_item:
+                    return TaskFilter.ALL;
+            }
+
+            return null;
+        }
+
+        View viewForTaskFilter(TaskFilter taskFilter) {
+            switch (taskFilter) {
+                case ALL:
+                    return nameTextView;
+
+                case FAVORITE:
+                    return favoriteImage;
+
+                case COMMENTED:
+                    return commentedImage;
+            }
+
+            return null;
         }
     }
 
@@ -95,12 +127,37 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
 
     private final String defaultTestName;
 
-    private final OnTestChoiceListener onTestChoiceListener;
+    private final SparseArray<TaskFilter> selections;
 
-    public TestListAdapter(List<Test> tests, String defaultTestName, OnTestChoiceListener onTestChoiceListener) {
+    private OnTestClickListener onTestClickListener;
+
+    private OnTestLongClickListener onTestLongClickListener;
+
+    public TestListAdapter(List<Test> tests, String defaultTestName) {
         this.tests = tests;
         this.defaultTestName = defaultTestName;
-        this.onTestChoiceListener = onTestChoiceListener;
+
+        selections = new SparseArray<>(tests.size());
+    }
+
+    @Override
+    public TestItemViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        View testItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.test_list_item, viewGroup, false);
+
+        return new TestItemViewHolder(testItemView);
+    }
+
+    @Override
+    public void onBindViewHolder(TestItemViewHolder holder, int position) {
+        holder.bind(getItem(position));
+    }
+
+    public void setOnTestClickListener(OnTestClickListener onTestClickListener) {
+        this.onTestClickListener = onTestClickListener;
+    }
+
+    public void setOnTestLongClickListener(OnTestLongClickListener onTestLongClickListener) {
+        this.onTestLongClickListener = onTestLongClickListener;
     }
 
     @Override
@@ -108,15 +165,44 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
         return tests.size();
     }
 
-    @Override
-    public TestItemViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View testItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.test_list_item, viewGroup, false);
-
-        return new TestItemViewHolder(testItemView, defaultTestName, onTestChoiceListener);
+    public Test getItem(int position) {
+        return tests.get(position);
     }
 
-    @Override
-    public void onBindViewHolder(TestItemViewHolder holder, int position) {
-        holder.bind(tests.get(position));
+    public int getSelectionCount() {
+        return selections.size();
+    }
+
+    public int[] getSelectionPositions() {
+        int[] positions = new int[selections.size()];
+        for (int i = 0; i < positions.length; ++i) {
+            positions[i] = selections.keyAt(i);
+        }
+
+        return positions;
+    }
+
+    public TaskFilter getSelection(int position) {
+        return selections.get(position);
+    }
+
+    public void setSelection(int position, TaskFilter taskFilter) {
+        selections.put(position, taskFilter);
+
+        notifyItemChanged(position);
+    }
+
+    public void clearSelection(int position) {
+        selections.delete(position);
+
+        notifyItemChanged(position);
+    }
+
+    public void clearSelections() {
+        for (int i = 0; i < getSelectionCount(); ++i) {
+            notifyItemChanged(selections.keyAt(i));
+        }
+
+        selections.clear();
     }
 }

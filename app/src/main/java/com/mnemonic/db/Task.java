@@ -1,10 +1,30 @@
 package com.mnemonic.db;
 
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 
-public class Task implements Serializable {
+public class Task implements Parcelable {
+
+    public static final Parcelable.Creator<Task> CREATOR = new Parcelable.Creator<Task>() {
+
+        @Override
+        public Task createFromParcel(Parcel in) {
+            long _id = in.readLong();
+            String question = in.readString();
+            String answer = in.readString();
+            boolean favorite = in.readInt() != 0;
+            String comment = in.readString();
+
+            return new Task(_id, question, answer, favorite, comment);
+        }
+
+        @Override
+        public Task[] newArray(int size) {
+            return new Task[size];
+        }
+    };
 
     final Long _id;
 
@@ -38,6 +58,20 @@ public class Task implements Serializable {
 
     public String getComment() {
         return comment;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(_id);
+        dest.writeString(question);
+        dest.writeString(answer);
+        dest.writeInt(favorite ? 1 : 0);
+        dest.writeString(comment);
     }
 
     @Override

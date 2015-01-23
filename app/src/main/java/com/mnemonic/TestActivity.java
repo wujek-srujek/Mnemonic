@@ -1,6 +1,7 @@
 package com.mnemonic;
 
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,8 +14,6 @@ import android.widget.Toolbar;
 
 import com.mnemonic.db.DbHelper;
 import com.mnemonic.db.Task;
-import com.mnemonic.db.TaskFilter;
-import com.mnemonic.db.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,11 +23,9 @@ import java.util.Random;
 
 public class TestActivity extends Activity {
 
-    public final static String TEST_EXTRA = "test";
+    public final static String TEST_NAME_EXTRA = "testName";
 
-    public final static String TASK_FILTER_EXTRA = "taskFiter";
-
-    private final static String TASKS_BUNDLE_KEY = "tasks";
+    public final static String TASKS_EXTRA = "tasks";
 
     private final static String IS_QUESTION_BUNDLE_KEY = "isQuestion";
 
@@ -40,13 +37,13 @@ public class TestActivity extends Activity {
 
     private ImageButton favoriteButton;
 
-    private List<Task> orderedTasks;
+    private ArrayList<Task> orderedTasks;
 
     private boolean isQuestion;
 
     private long randomSeed;
 
-    private TaskPagerAdapter adapter;
+    private TaskPagerAdapter taskPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,16 +54,12 @@ public class TestActivity extends Activity {
 
         dbHelper = new DbHelper(this);
 
-        Test test = (Test) getIntent().getSerializableExtra(TEST_EXTRA);
-        if (test == null) {
-            throw new IllegalStateException("must specify the test using intent extra " + TEST_EXTRA);
+        // just to silence the warning...
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(getIntent().getStringExtra(TEST_NAME_EXTRA));
         }
-        TaskFilter taskFilter = (TaskFilter) getIntent().getSerializableExtra(TASK_FILTER_EXTRA);
-        if (taskFilter == null) {
-            throw new IllegalStateException("must specify the filter using intent extra " + TASK_FILTER_EXTRA);
-        }
-
-        getActionBar().setTitle(test.getName() != null ? test.getName() : getString(R.string.default_test_name));
+        orderedTasks = getIntent().getParcelableArrayListExtra(TASKS_EXTRA);
 
         if (savedInstanceState != null) {
             // recreating the state after destroy in the background
@@ -75,14 +68,6 @@ public class TestActivity extends Activity {
         } else {
             // fresh instance
             initBasicState();
-        }
-        // if there was no filter, the tasks need to be fetched as well
-        if (savedInstanceState != null && taskFilter != TaskFilter.ALL) {
-            @SuppressWarnings("unchecked")
-            List<Task> tasks = (List<Task>) savedInstanceState.getSerializable(TASKS_BUNDLE_KEY);
-            orderedTasks = tasks;
-        } else {
-            orderedTasks = dbHelper.getTasks(test, taskFilter);
         }
 
         taskPager = (ViewPager) findViewById(R.id.task_pager);
@@ -105,7 +90,7 @@ public class TestActivity extends Activity {
 
             @Override
             public void onPageSelected(int position) {
-                isQuestion = adapter.isQuestion(position);
+                isQuestion = taskPagerAdapter.isQuestion(position);
 
                 updateTaskInfo();
             }
@@ -123,7 +108,9 @@ public class TestActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        updateTaskInfo();
+        if (taskPagerAdapter != null) {
+            updateTaskInfo();
+        }
     }
 
     @Override
@@ -143,11 +130,13 @@ public class TestActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+        if (taskPagerAdapter != null) {
+            Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
 
-        MenuItem commentMenuItem = menu.findItem(R.id.test_menu_comment);
-        commentMenuItem.setIcon(currentTask.getComment() != null ?
-                R.drawable.ic_action_comment : R.drawable.ic_action_no_comment);
+            MenuItem commentMenuItem = menu.findItem(R.id.test_menu_comment);
+            commentMenuItem.setIcon(currentTask.getComment() != null ?
+                    R.drawable.ic_action_comment : R.drawable.ic_action_no_comment);
+        }
 
         return true;
     }
@@ -156,13 +145,6 @@ public class TestActivity extends Activity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        // if the tasks were filtered (like favorite), it may have happened that
-        // some of them were changed in a way that they would not appear again in
-        // search results; this would result in strange effects in rotations etc.
-        // so save them as well; for unfiltered tests, don't bother
-        if (getIntent().getSerializableExtra(TASK_FILTER_EXTRA) != TaskFilter.ALL) {
-            outState.putSerializable(TASKS_BUNDLE_KEY, new ArrayList<>(orderedTasks));
-        }
         outState.putBoolean(IS_QUESTION_BUNDLE_KEY, isQuestion);
         outState.putLong(RANDOM_SEED_BUNDLE_KEY, randomSeed);
     }
@@ -187,17 +169,21 @@ public class TestActivity extends Activity {
     private void initPager() {
         List<Task> shuffledTasks = new ArrayList<>(orderedTasks);
         Collections.shuffle(shuffledTasks, new Random(randomSeed));
-        adapter = new TaskPagerAdapter(getLayoutInflater(), shuffledTasks);
-        taskPager.setAdapter(adapter);
+        taskPagerAdapter = new TaskPagerAdapter(getLayoutInflater(), shuffledTasks);
+        taskPager.setAdapter(taskPagerAdapter);
     }
 
     private void updateTaskInfo() {
         String taskPart = getString(isQuestion ? R.string.question : R.string.answer);
         String taskInfo = String.format(getString(R.string.task_info_format), taskPart,
-                adapter.taskNumberForPosition(taskPager.getCurrentItem()) + 1, orderedTasks.size());
-        getActionBar().setSubtitle(taskInfo);
+                taskPagerAdapter.taskNumberForPosition(taskPager.getCurrentItem()) + 1, orderedTasks.size());
+        // just to silence the warning...
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setSubtitle(taskInfo);
+        }
 
-        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+        Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
         updateFavoriteState(currentTask);
         invalidateOptionsMenu();
     }
@@ -209,14 +195,14 @@ public class TestActivity extends Activity {
     }
 
     private void editComment() {
-        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+        Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
         dbHelper.setComment(currentTask, currentTask.getComment() == null ? "test comment" : null);
 
         invalidateOptionsMenu();
     }
 
     private void toggleFavorite() {
-        Task currentTask = adapter.taskForPosition(taskPager.getCurrentItem());
+        Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
         dbHelper.setFavorite(currentTask, !currentTask.isFavorite());
 
         updateFavoriteState(currentTask);
