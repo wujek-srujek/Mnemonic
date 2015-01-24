@@ -67,24 +67,27 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:orientation="vertical"
         android:paddingEnd="0dp"
         android:paddingStart="@dimen/padding_small">
-
-        <ImageView
-            android:id="@+id/test_list_item_favorite_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/ripple_noaccent"
-            android:src="@drawable/ic_action_favorite"
-            tools:ignore="ContentDescription"/>
 
         <ImageView
             android:id="@+id/test_list_item_commented_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/ripple_noaccent"
+            android:paddingEnd="@dimen/padding_tiny"
+            android:paddingStart="@dimen/padding_tiny"
             android:src="@drawable/ic_action_comment"
+            tools:ignore="ContentDescription"/>
+
+        <ImageView
+            android:id="@+id/test_list_item_favorite_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ripple_noaccent"
+            android:paddingEnd="@dimen/padding_tiny"
+            android:paddingStart="@dimen/padding_tiny"
+            android:src="@drawable/ic_action_favorite"
             tools:ignore="ContentDescription"/>
 
     </LinearLayout>

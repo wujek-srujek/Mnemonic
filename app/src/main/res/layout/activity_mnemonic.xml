@@ -23,7 +23,7 @@
         android:layout_below="@id/toolbar"
         android:gravity="center"
         android:text="@string/empty_test_list_warning"
-        android:textAppearance="?attr/textAppearanceExtraLarge"
+        android:textAppearance="?android:attr/textAppearanceLarge"
         android:visibility="gone"/>
 
 </RelativeLayout>

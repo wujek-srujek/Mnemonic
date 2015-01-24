@@ -3,6 +3,7 @@
 
     <dimen name="padding_big">16dp</dimen>
     <dimen name="padding_small">6dp</dimen>
+    <dimen name="padding_tiny">3dp</dimen>
     <dimen name="fab_size">56dp</dimen>
     <dimen name="test_item_icon_size">46dp</dimen>
 
