@@ -18,8 +18,6 @@
         <item name="android:elevation">2dp</item>
     </style>
 
-    <style name="MnemonicFilePickerTheme" parent="android:Theme.Material"/>
-
     <style name="MnemonicTextAppearance.ExtraLarge" parent="android:TextAppearance.Large">
         <item name="android:textSize">25sp</item>
     </style>

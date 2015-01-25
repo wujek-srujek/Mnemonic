@@ -4,7 +4,10 @@ package com.mnemonic;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,9 +28,7 @@ import com.mnemonic.db.Test;
 import com.mnemonic.db.TestGroup;
 import com.mnemonic.importer.ImportException;
 import com.mnemonic.importer.Importer;
-import com.nononsenseapps.filepicker.FilePickerActivity;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -143,10 +144,11 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == Activity.RESULT_OK) {
-            importTests(data.getData().getPath());
-
-            super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                importTests(uri);
+            }
         }
     }
 
@@ -243,23 +245,18 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
         startTest();
     }
 
-    private void importTests(String filePath) {
-        InputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(filePath);
-            new Importer(dbHelper).importTests(filePath, inputStream);
+    private void importTests(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+             InputStream inputStream = getContentResolver().openInputStream(uri)) {
+            String name = null;
+            if (cursor != null && cursor.moveToFirst()) {
+                name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+            }
+            new Importer(dbHelper).importTests(name, inputStream);
             initUi();
         } catch (IOException | ImportException e) {
             Log.e(TAG, "error importing data", e);
             Toast.makeText(MnemonicActivity.this, R.string.import_error, Toast.LENGTH_LONG).show();
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException ignored) {
-                    // ignored
-                }
-            }
         }
     }
 
@@ -286,10 +283,9 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
     }
 
     private void browse() {
-        Intent intent = new Intent(this, FilePickerActivity.class);
-        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("text/plain");
         startActivityForResult(intent, 0);
     }
 
