@@ -4,10 +4,31 @@
       tools:context="com.mnemonic.MnemonicActivity">
 
     <item
-        android:icon="@drawable/ic_action_browse"
-        android:onClick="browse"
+        android:icon="@drawable/ic_action_favorite"
+        android:onClick="startAllFavorite"
         android:orderInCategory="100"
         android:showAsAction="ifRoom"
+        android:title="@string/action_all_favorite"/>
+
+    <item
+        android:icon="@drawable/ic_action_comment"
+        android:onClick="startAllCommented"
+        android:orderInCategory="200"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_all_commented"/>
+
+    <item
+        android:icon="@drawable/ic_action_multitest"
+        android:onClick="startAll"
+        android:orderInCategory="300"
+        android:showAsAction="never"
+        android:title="@string/action_all_tasks"/>
+
+    <item
+        android:icon="@drawable/ic_action_browse"
+        android:onClick="browse"
+        android:orderInCategory="400"
+        android:showAsAction="never"
         android:title="@string/action_browse"/>
 
 </menu>

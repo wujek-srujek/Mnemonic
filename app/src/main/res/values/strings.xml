@@ -3,6 +3,10 @@
 
     <string name="app_name">Mnemonic</string>
     <string name="action_browse">Browse</string>
+    <string name="action_all_tasks">All tasks</string>
+    <string name="action_all_favorite">All favorite</string>
+    <string name="action_all_commented">All commented</string>
+    <string name="meta_name_braces">&lt;%s&gt;</string>
     <string name="default_test_name">&lt;Unnamed test&gt;</string>
     <string name="import_error">Problems occurred, data not imported</string>
     <string name="empty_test_format">Test \'%s\' is empty</string>

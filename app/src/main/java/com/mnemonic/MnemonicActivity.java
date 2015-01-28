@@ -168,6 +168,21 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
         }
     }
 
+    public void startAll(MenuItem menuItem) {
+        startAll(String.format(getString(R.string.meta_name_braces), getString(R.string.action_all_tasks)),
+                TaskFilter.ALL);
+    }
+
+    public void startAllFavorite(MenuItem menuItem) {
+        startAll(String.format(getString(R.string.meta_name_braces), getString(R.string.action_all_favorite)),
+                TaskFilter.FAVORITE);
+    }
+
+    public void startAllCommented(MenuItem menuItem) {
+        startAll(String.format(getString(R.string.meta_name_braces), getString(R.string.action_all_commented)),
+                TaskFilter.COMMENTED);
+    }
+
     public void browse(MenuItem menuItem) {
         browse();
     }
@@ -177,7 +192,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
         if (multitestMode == null) {
             // if not in multitest mode, start the test immediately
             testListAdapter.setSelection(position, taskFilter);
-            startTest();
+            startSelected(null);
         } else {
             applyMultitestEvent(position, taskFilter);
         }
@@ -242,7 +257,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
     }
 
     public void startMultitest(View view) {
-        startTest();
+        startSelected(null);
     }
 
     private void importTests(Uri uri) {
@@ -289,8 +304,18 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
         startActivityForResult(intent, 0);
     }
 
-    private void startTest() {
-        String testName;
+    private void startAll(String testName, TaskFilter taskFilter) {
+        for (int i = 0; i < testListAdapter.getItemCount(); ++i) {
+            Test test = testListAdapter.getItem(i);
+            if (test.availableTaskFilters().contains(taskFilter)) {
+                testListAdapter.setSelection(i, taskFilter);
+            }
+        }
+
+        startSelected(testName);
+    }
+
+    private void startSelected(String testName) {
         ArrayList<Task> tasks;
 
         int[] selectionPositions = testListAdapter.getSelectionPositions();
@@ -298,10 +323,14 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             Test test = testListAdapter.getItem(selectionPositions[0]);
             TaskFilter taskFilter = testListAdapter.getSelection(selectionPositions[0]);
 
-            testName = test.getName() != null ? test.getName() : getString(R.string.default_test_name);
+            if (testName == null) {
+                testName = test.getName() != null ? test.getName() : getString(R.string.default_test_name);
+            }
             tasks = new ArrayList<>(dbHelper.getTasks(test, taskFilter));
         } else {
-            testName = getString(R.string.multitest_title);
+            if (testName == null) {
+                testName = getString(R.string.multitest_title);
+            }
 
             int taskCount = 0;
             for (int position : selectionPositions) {
