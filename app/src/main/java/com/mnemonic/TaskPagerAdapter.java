@@ -8,33 +8,33 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.mnemonic.db.Task;
+import com.mnemonic.db.TaskPage;
 
 import java.util.List;
 
 
 public class TaskPagerAdapter extends PagerAdapter {
 
-    private LayoutInflater inflater;
+    private final LayoutInflater inflater;
 
-    private List<Task> tasks;
+    private final List<TaskPage> pages;
 
-    public TaskPagerAdapter(LayoutInflater inflater, List<Task> tasks) {
+    public TaskPagerAdapter(LayoutInflater inflater, List<TaskPage> pages) {
         this.inflater = inflater;
-        this.tasks = tasks;
+        this.pages = pages;
     }
 
     @Override
     public int getCount() {
-        // question and answer are separate pages
-        return tasks.size() * 2;
+        return pages.size();
     }
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        Task task = tasks.get(taskNumberForPosition(position));
+        TaskPage currentPage = pages.get(position);
 
         TextView textView = (TextView) inflater.inflate(R.layout.task_page, container, false);
-        textView.setText(isQuestion(position) ? task.getQuestion() : task.getAnswer());
+        textView.setText(currentPage.getText());
         container.addView(textView);
 
         return textView;
@@ -52,15 +52,11 @@ public class TaskPagerAdapter extends PagerAdapter {
         return view == object;
     }
 
-    public Task taskForPosition(int position) {
-        return tasks.get(taskNumberForPosition(position));
+    public TaskPage getTaskPage(int position) {
+        return pages.get(position);
     }
 
-    public int taskNumberForPosition(int position) {
-        return position / 2;
-    }
-
-    public boolean isQuestion(int position) {
-        return position % 2 == 0;
+    public Task getTask(int position) {
+        return pages.get(position).getTask();
     }
 }

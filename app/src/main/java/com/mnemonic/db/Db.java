@@ -37,6 +37,8 @@ public final class Db {
 
         public static final String DESCRIPTION = "description";
 
+        public static final String _ANSWER_COUNT = "_answer_count";
+
         static final String _CREATE_TABLE = "create table " + _TABLE_NAME + " (" +
                 _ID + " integer primary key, " +
                 _TEST_GROUP_ID + " integer not null references " + TestGroup._TABLE_NAME + " on delete cascade, " +

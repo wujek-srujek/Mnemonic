@@ -14,7 +14,8 @@
     <string name="multitest_title">&lt;Multiple tests&gt;</string>
     <string name="question">Question</string>
     <string name="answer">Answer</string>
-    <string name="task_info_format">%1$s %2$d / %3$d</string>
+    <string name="info">Info</string>
+    <string name="task_info_format">%1$d / %2$d %3$s</string>
     <string name="empty_test_list_warning">The are no tests in the list, please choose a test file</string>
     <string name="empty_test_warning">No tasks for the specified criteria</string>
     <string name="action_restart_test">Restart test</string>

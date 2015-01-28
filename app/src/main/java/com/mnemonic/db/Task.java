@@ -4,6 +4,9 @@ package com.mnemonic.db;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class Task implements Parcelable {
 
@@ -44,20 +47,23 @@ public class Task implements Parcelable {
         this.comment = comment;
     }
 
-    public String getQuestion() {
-        return question;
-    }
-
-    public String getAnswer() {
-        return answer;
-    }
-
     public boolean isFavorite() {
         return favorite;
     }
 
     public String getComment() {
         return comment;
+    }
+
+    public List<TaskPage> getPages(int taskNumber) {
+        boolean isInfo = answer == null;
+        List<TaskPage> pages = new ArrayList<>(isInfo ? 1 : 2);
+        pages.add(new TaskPage(taskNumber, this, isInfo ? TaskPage.Type.INFO : TaskPage.Type.QUESTION, question));
+        if (answer != null) {
+            pages.add(new TaskPage(taskNumber, this, TaskPage.Type.ANSWER, answer));
+        }
+
+        return pages;
     }
 
     @Override

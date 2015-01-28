@@ -32,7 +32,7 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String SELECT_TEST_COUNT = "select count(*) from " + Db.Test._TABLE_NAME;
 
     private static final String TEST_PROPERTY_CHECK = "exists(select " + Db.Task._ID + " from " + Db.Task._TABLE_NAME +
-            " as task where task." + Db.Task._TEST_ID + "=test." + Db.Test._ID + " and task.%s limit 1) as %s";
+            " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + " and %s limit 1) as %s";
 
     private static final String TEST_HAS_FAVORITE_CHECK =
             String.format(TEST_PROPERTY_CHECK, TaskFilter.FAVORITE.getFilterCondition(), Db.Task.FAVORITE);
@@ -42,8 +42,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String SELECT_TESTS_FOR_GROUP = "select test.*, (select count(*) from " +
             Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " + Db.Task._COUNT + ", " +
-            TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK + " from " + Db.Test._TABLE_NAME +
-            " as test where test." + Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
+            TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK + ", (select count(" + Db.Task.ANSWER + ") from " +
+            Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " +
+            Db.Test._ANSWER_COUNT + " from " + Db.Test._TABLE_NAME + " as test where test." +
+            Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
 
     private static final String SELECT_TEST_FOR_ID = "select " + TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK +
             " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._ID + "=?";
@@ -123,7 +125,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Test._TABLE_NAME, null, values);
 
-        return new Test(_id, name, description, 0, false, false);
+        return new Test(_id, name, description, 0, 0, false, false);
     }
 
     public Task addTask(Test test, String question, String answer) {
@@ -135,6 +137,7 @@ public class DbHelper extends SQLiteOpenHelper {
         long _id = getWritableDatabase().insertOrThrow(Db.Task._TABLE_NAME, null, values);
 
         ++test.taskCount;
+        test.pagesCount += answer != null ? 2 : 1;
 
         return new Task(_id, question, answer, false, null);
     }
@@ -180,10 +183,11 @@ public class DbHelper extends SQLiteOpenHelper {
             String name = cursor.getString(cursor.getColumnIndex(Db.Test.NAME));
             String description = cursor.getString(cursor.getColumnIndex(Db.Test.DESCRIPTION));
             int taskCount = cursor.getInt(cursor.getColumnIndex(Db.Task._COUNT));
+            int answerCount = cursor.getInt(cursor.getColumnIndex(Db.Test._ANSWER_COUNT));
             boolean hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
             boolean hasCommented = cursor.getInt(cursor.getColumnIndex(Db.Task.COMMENT)) != 0;
 
-            tests.add(new Test(_id, name, description, taskCount, hasFavorite, hasCommented));
+            tests.add(new Test(_id, name, description, taskCount, taskCount + answerCount, hasFavorite, hasCommented));
         }
         cursor.close();
 

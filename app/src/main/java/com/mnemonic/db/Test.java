@@ -15,15 +15,18 @@ public class Test {
 
     int taskCount;
 
+    int pagesCount;
+
     boolean hasFavorite;
 
     boolean hasCommented;
 
-    Test(long _id, String name, String description, int taskCount, boolean hasFavorite, boolean hasCommented) {
+    Test(long _id, String name, String description, int taskCount, int pagesCount, boolean hasFavorite, boolean hasCommented) {
         this._id = _id;
         this.name = name;
         this.description = description;
         this.taskCount = taskCount;
+        this.pagesCount = pagesCount;
         this.hasFavorite = hasFavorite;
         this.hasCommented = hasCommented;
     }
@@ -38,6 +41,10 @@ public class Test {
 
     public int getTaskCount() {
         return taskCount;
+    }
+
+    public int getPagesCount() {
+        return pagesCount;
     }
 
     public boolean hasFavorite() {
@@ -62,7 +69,7 @@ public class Test {
 
     @Override
     public String toString() {
-        return String.format("%s[name=%s, description=%s, taskCount=%d, hasFavorite=%b, hasCommented=%b]",
-                getClass().getSimpleName(), name, description, taskCount, hasFavorite, hasCommented);
+        return String.format("%s[name=%s, description=%s, taskCount=%d, pagesCount=%d, hasFavorite=%b, hasCommented=%b]",
+                getClass().getSimpleName(), name, description, taskCount, pagesCount, hasFavorite, hasCommented);
     }
 }

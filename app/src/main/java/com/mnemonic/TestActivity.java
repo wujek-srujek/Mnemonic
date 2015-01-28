@@ -14,6 +14,7 @@ import android.widget.Toolbar;
 
 import com.mnemonic.db.DbHelper;
 import com.mnemonic.db.Task;
+import com.mnemonic.db.TaskPage;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +28,7 @@ public class TestActivity extends Activity {
 
     public final static String TASKS_EXTRA = "tasks";
 
-    private final static String IS_QUESTION_BUNDLE_KEY = "isQuestion";
+    public final static String PAGES_COUNT_EXTRA = "pagesCount";
 
     private final static String RANDOM_SEED_BUNDLE_KEY = "randomSeed";
 
@@ -39,7 +40,7 @@ public class TestActivity extends Activity {
 
     private ArrayList<Task> orderedTasks;
 
-    private boolean isQuestion;
+    private int pagesCount;
 
     private long randomSeed;
 
@@ -60,14 +61,14 @@ public class TestActivity extends Activity {
             actionBar.setTitle(getIntent().getStringExtra(TEST_NAME_EXTRA));
         }
         orderedTasks = getIntent().getParcelableArrayListExtra(TASKS_EXTRA);
+        pagesCount = getIntent().getIntExtra(PAGES_COUNT_EXTRA, 0);
 
         if (savedInstanceState != null) {
             // recreating the state after destroy in the background
-            isQuestion = savedInstanceState.getBoolean(IS_QUESTION_BUNDLE_KEY, true);
             randomSeed = savedInstanceState.getLong(RANDOM_SEED_BUNDLE_KEY, 0);
         } else {
             // fresh instance
-            initBasicState();
+            randomSeed = System.nanoTime();
         }
 
         taskPager = (ViewPager) findViewById(R.id.task_pager);
@@ -90,8 +91,6 @@ public class TestActivity extends Activity {
 
             @Override
             public void onPageSelected(int position) {
-                isQuestion = taskPagerAdapter.isQuestion(position);
-
                 updateTaskInfo();
             }
 
@@ -117,11 +116,11 @@ public class TestActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        // returning false seems better here, but there is an issue which disables
-        // the 'up' arrow navigation when false is returned, so just do it instead
-        if (!orderedTasks.isEmpty()) {
-            getMenuInflater().inflate(R.menu.menu_test, menu);
+        if (orderedTasks.isEmpty()) {
+            return false;
         }
+
+        getMenuInflater().inflate(R.menu.menu_test, menu);
 
         return true;
     }
@@ -131,7 +130,7 @@ public class TestActivity extends Activity {
         super.onPrepareOptionsMenu(menu);
 
         if (taskPagerAdapter != null) {
-            Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
+            Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
 
             MenuItem commentMenuItem = menu.findItem(R.id.test_menu_comment);
             commentMenuItem.setIcon(currentTask.getComment() != null ?
@@ -145,7 +144,6 @@ public class TestActivity extends Activity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putBoolean(IS_QUESTION_BUNDLE_KEY, isQuestion);
         outState.putLong(RANDOM_SEED_BUNDLE_KEY, randomSeed);
     }
 
@@ -161,48 +159,64 @@ public class TestActivity extends Activity {
         toggleFavorite();
     }
 
-    private void initBasicState() {
-        isQuestion = true;
-        randomSeed = System.nanoTime();
-    }
-
     private void initPager() {
         List<Task> shuffledTasks = new ArrayList<>(orderedTasks);
         Collections.shuffle(shuffledTasks, new Random(randomSeed));
-        taskPagerAdapter = new TaskPagerAdapter(getLayoutInflater(), shuffledTasks);
+        List<TaskPage> taskPages = new ArrayList<>(pagesCount);
+        int i = 0;
+        for (Task task : shuffledTasks) {
+            taskPages.addAll(task.getPages(++i));
+        }
+
+        taskPagerAdapter = new TaskPagerAdapter(getLayoutInflater(), taskPages);
         taskPager.setAdapter(taskPagerAdapter);
     }
 
     private void updateTaskInfo() {
-        String taskPart = getString(isQuestion ? R.string.question : R.string.answer);
-        String taskInfo = String.format(getString(R.string.task_info_format), taskPart,
-                taskPagerAdapter.taskNumberForPosition(taskPager.getCurrentItem()) + 1, orderedTasks.size());
-        // just to silence the warning...
+        TaskPage currentPage = taskPagerAdapter.getTaskPage(taskPager.getCurrentItem());
+
+        int stringId;
+        switch (currentPage.getType()) {
+            case QUESTION:
+                stringId = R.string.question;
+                break;
+
+            case ANSWER:
+                stringId = R.string.answer;
+                break;
+
+            default:
+                stringId = R.string.info;
+                break;
+        }
+
+        String taskInfo = String.format(getString(R.string.task_info_format),
+                currentPage.getTaskNumber(), orderedTasks.size(), getString(stringId));
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setSubtitle(taskInfo);
         }
 
-        Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
+        Task currentTask = currentPage.getTask();
         updateFavoriteState(currentTask);
         invalidateOptionsMenu();
     }
 
     private void restartTest() {
-        initBasicState();
+        randomSeed = System.nanoTime();
         initPager();
         updateTaskInfo();
     }
 
     private void editComment() {
-        Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
+        Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
         dbHelper.setComment(currentTask, currentTask.getComment() == null ? "test comment" : null);
 
         invalidateOptionsMenu();
     }
 
     private void toggleFavorite() {
-        Task currentTask = taskPagerAdapter.taskForPosition(taskPager.getCurrentItem());
+        Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
         dbHelper.setFavorite(currentTask, !currentTask.isFavorite());
 
         updateFavoriteState(currentTask);

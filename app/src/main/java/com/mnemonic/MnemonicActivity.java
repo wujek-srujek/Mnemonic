@@ -317,6 +317,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
 
     private void startSelected(String testName) {
         ArrayList<Task> tasks;
+        int pagesCount;
 
         int[] selectionPositions = testListAdapter.getSelectionPositions();
         if (testListAdapter.getSelectionCount() == 1) {
@@ -327,6 +328,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
                 testName = test.getName() != null ? test.getName() : getString(R.string.default_test_name);
             }
             tasks = new ArrayList<>(dbHelper.getTasks(test, taskFilter));
+            pagesCount = test.getPagesCount();
         } else {
             if (testName == null) {
                 testName = getString(R.string.multitest_title);
@@ -336,11 +338,13 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             for (int position : selectionPositions) {
                 taskCount += testListAdapter.getItem(position).getTaskCount();
             }
+            pagesCount = 0;
             tasks = new ArrayList<>(taskCount);
             for (int position : selectionPositions) {
                 Test test = testListAdapter.getItem(position);
                 TaskFilter taskFilter = testListAdapter.getSelection(position);
                 tasks.addAll(dbHelper.getTasks(test, taskFilter));
+                pagesCount += test.getPagesCount();
             }
         }
 
@@ -354,6 +358,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
             intent.putExtra(TestActivity.TEST_NAME_EXTRA, testName);
             intent.putExtra(TestActivity.TASKS_EXTRA, tasks);
+            intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);
 
             startActivity(intent);
         }
