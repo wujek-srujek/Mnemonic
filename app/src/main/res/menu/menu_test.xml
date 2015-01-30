@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:tools="http://schemas.android.com/tools"
-      tools:context="com.mnemonic.TestActivity">
+      tools:context=".TestActivity">
 
     <item
-        android:id="@+id/test_menu_comment"
+        android:id="@+id/test_action_comment"
         android:onClick="editComment"
         android:orderInCategory="100"
         android:showAsAction="ifRoom"

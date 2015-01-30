@@ -20,5 +20,8 @@
     <string name="empty_test_warning">No tasks for the specified criteria</string>
     <string name="action_restart_test">Restart test</string>
     <string name="action_edit_comment">Edit comment</string>
+    <string name="add_comment_hint">Add your comment</string>
+    <string name="action_apply">Apply</string>
+    <string name="action_cancel_delete">Cancel/delete</string>
 
 </resources>

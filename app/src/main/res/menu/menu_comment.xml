@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context=".CommentActivity">
+
+    <group>
+
+        <item
+            android:icon="@drawable/ic_action_cancel_delete"
+            android:onClick="cancelDelete"
+            android:orderInCategory="100"
+            android:showAsAction="ifRoom"
+            android:title="@string/action_cancel_delete"/>
+
+        <item
+            android:icon="@drawable/ic_action_apply"
+            android:onClick="apply"
+            android:orderInCategory="200"
+            android:showAsAction="ifRoom"
+            android:title="@string/action_apply"/>
+
+    </group>
+</menu>

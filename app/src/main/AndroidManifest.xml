@@ -25,6 +25,10 @@
             android:name=".TestActivity"
             android:parentActivityName=".MnemonicActivity"/>
 
+        <activity
+            android:name=".CommentActivity"
+            android:parentActivityName=".TestActivity"/>
+
     </application>
 
 </manifest>

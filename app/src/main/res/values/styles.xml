@@ -3,19 +3,26 @@
 
     <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
-        <item name="android:windowActionModeOverlay">true</item>
-        <item name="textAppearanceExtraLarge">@style/MnemonicTextAppearance.ExtraLarge</item>
+        <item name="android:editTextStyle">@style/MnemonicEditTextStyle</item>
         <item name="floatingActionButtonStyle">@style/MnemonicFabStyle</item>
-    </style>
-
-    <style name="MnemonicFabStyle" parent="android:Widget.ImageButton">
-        <item name="android:background">@drawable/ripple</item>
-        <item name="android:elevation">4dp</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="textAppearanceExtraLarge">@style/MnemonicTextAppearance.ExtraLarge</item>
     </style>
 
     <style name="MnemonicToolbarStyle" parent="android:Widget.Toolbar">
         <item name="android:background">?android:attr/colorPrimary</item>
         <item name="android:elevation">2dp</item>
+    </style>
+
+    <style name="MnemonicEditTextStyle" parent="android:Widget.EditText">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:padding">@dimen/padding_big</item>
+    </style>
+
+    <style name="MnemonicFabStyle" parent="android:Widget.ImageButton">
+        <item name="android:background">@drawable/ripple</item>
+        <item name="android:elevation">4dp</item>
     </style>
 
     <style name="MnemonicTextAppearance.ExtraLarge" parent="android:TextAppearance.Large">

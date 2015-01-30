@@ -383,7 +383,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
                 testListAdapter.clearSelections();
             }
         } else {
-            Intent intent = new Intent(MnemonicActivity.this, TestActivity.class);
+            Intent intent = new Intent(this, TestActivity.class);
             intent.putExtra(TestActivity.TEST_NAME_EXTRA, testName);
             intent.putExtra(TestActivity.TASKS_EXTRA, tasks);
             intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);

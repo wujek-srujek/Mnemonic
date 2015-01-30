@@ -3,6 +3,7 @@ package com.mnemonic;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
@@ -53,13 +54,13 @@ public class TestActivity extends Activity {
         setContentView(R.layout.activity_test);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        dbHelper = new DbHelper(this);
-
-        // just to silence the warning...
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setTitle(getIntent().getStringExtra(TEST_NAME_EXTRA));
         }
+
+        dbHelper = new DbHelper(this);
+
         orderedTasks = getIntent().getParcelableArrayListExtra(TASKS_EXTRA);
         pagesCount = getIntent().getIntExtra(PAGES_COUNT_EXTRA, 0);
 
@@ -131,13 +132,31 @@ public class TestActivity extends Activity {
 
         if (taskPagerAdapter != null) {
             Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
+            boolean hasComment = currentTask.getComment() != null;
 
-            MenuItem commentMenuItem = menu.findItem(R.id.test_menu_comment);
-            commentMenuItem.setIcon(currentTask.getComment() != null ?
-                    R.drawable.ic_action_comment : R.drawable.ic_action_no_comment);
+            MenuItem commentMenuItem = menu.findItem(R.id.test_action_comment);
+            commentMenuItem.setIcon(hasComment ? R.drawable.ic_action_comment : R.drawable.ic_action_no_comment);
         }
 
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            String comment = data.getStringExtra(CommentActivity.COMMENT_EXTRA);
+            if (comment != null) {
+                comment = comment.trim();
+                if (comment.isEmpty()) {
+                    comment = null;
+                }
+            }
+
+            Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
+            dbHelper.setComment(currentTask, comment);
+
+            invalidateOptionsMenu();
+        }
     }
 
     @Override
@@ -151,12 +170,12 @@ public class TestActivity extends Activity {
         restartTest();
     }
 
-    public void editComment(MenuItem menuItem) {
-        editComment();
-    }
-
     public void toggleFavorite(View view) {
         toggleFavorite();
+    }
+
+    public void editComment(MenuItem menuItem) {
+        editComment();
     }
 
     private void initPager() {
@@ -192,6 +211,7 @@ public class TestActivity extends Activity {
 
         String taskInfo = String.format(getString(R.string.task_info_format),
                 currentPage.getTaskNumber(), orderedTasks.size(), getString(stringId));
+
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setSubtitle(taskInfo);
@@ -208,18 +228,20 @@ public class TestActivity extends Activity {
         updateTaskInfo();
     }
 
-    private void editComment() {
-        Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
-        dbHelper.setComment(currentTask, currentTask.getComment() == null ? "test comment" : null);
-
-        invalidateOptionsMenu();
-    }
-
     private void toggleFavorite() {
         Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
         dbHelper.setFavorite(currentTask, !currentTask.isFavorite());
 
         updateFavoriteState(currentTask);
+    }
+
+    private void editComment() {
+        Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
+
+        Intent intent = new Intent(this, CommentActivity.class);
+        intent.putExtra(CommentActivity.COMMENT_EXTRA, currentTask.getComment());
+
+        startActivityForResult(intent, 0);
     }
 
     private void updateFavoriteState(Task task) {
