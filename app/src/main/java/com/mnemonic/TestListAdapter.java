@@ -77,8 +77,8 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
                 descriptionTextView.setVisibility(View.GONE);
                 descriptionTextView.setText(null);
             }
-            favoriteImage.setVisibility(test.hasFavorite() ? View.VISIBLE : View.GONE);
-            commentedImage.setVisibility(test.hasCommented() ? View.VISIBLE : View.GONE);
+            favoriteImage.setVisibility(test.hasTaskFilter(TaskFilter.FAVORITE) ? View.VISIBLE : View.GONE);
+            commentedImage.setVisibility(test.hasTaskFilter(TaskFilter.COMMENTED) ? View.VISIBLE : View.GONE);
 
             // reset any selections
             nameTextView.setActivated(false);

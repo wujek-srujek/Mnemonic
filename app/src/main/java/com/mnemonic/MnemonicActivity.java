@@ -102,12 +102,12 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             for (int position : testListAdapter.getSelectionPositions()) {
                 Test test = testListAdapter.getItem(position);
                 TaskFilter taskFilter = testListAdapter.getSelection(position);
-                Set<TaskFilter> previouslyAvailableTaskFilters = test.availableTaskFilters();
+                Set<TaskFilter> previouslyAvailableTaskFilters = test.getAvailableTaskFilters();
 
                 // refresh test information
                 dbHelper.refreshTest(test);
 
-                Set<TaskFilter> availableTaskFilters = test.availableTaskFilters();
+                Set<TaskFilter> availableTaskFilters = test.getAvailableTaskFilters();
                 // check if the test view is still valid, i.e. if all previous filters are still available
                 if (!availableTaskFilters.equals(previouslyAvailableTaskFilters)) {
                     if (!availableTaskFilters.contains(taskFilter)) {
@@ -307,7 +307,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
     private void startAll(String testName, TaskFilter taskFilter) {
         for (int i = 0; i < testListAdapter.getItemCount(); ++i) {
             Test test = testListAdapter.getItem(i);
-            if (test.availableTaskFilters().contains(taskFilter)) {
+            if (test.getAvailableTaskFilters().contains(taskFilter)) {
                 testListAdapter.setSelection(i, taskFilter);
             }
         }

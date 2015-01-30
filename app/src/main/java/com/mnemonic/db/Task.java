@@ -55,6 +55,10 @@ public class Task implements Parcelable {
         return comment;
     }
 
+    public int getPagesCount() {
+        return answer != null ? 2 : 1;
+    }
+
     public List<TaskPage> getPages(int taskNumber) {
         boolean isInfo = answer == null;
         List<TaskPage> pages = new ArrayList<>(isInfo ? 1 : 2);

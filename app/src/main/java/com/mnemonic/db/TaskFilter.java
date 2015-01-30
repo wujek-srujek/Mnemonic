@@ -5,6 +5,11 @@ public enum TaskFilter {
 
     ALL {
         @Override
+        public String getColumn() {
+            return Db.Task._COUNT;
+        }
+
+        @Override
         public String getFilterCondition() {
             return "1=1";
         }
@@ -12,17 +17,29 @@ public enum TaskFilter {
 
     FAVORITE {
         @Override
+        public String getColumn() {
+            return Db.Task.FAVORITE;
+        }
+
+        @Override
         public String getFilterCondition() {
-            return Db.Task.FAVORITE + "=1";
+            return getColumn() + "=1";
         }
     },
 
     COMMENTED {
         @Override
+        public String getColumn() {
+            return Db.Task.COMMENT;
+        }
+
+        @Override
         public String getFilterCondition() {
-            return Db.Task.COMMENT + " is not null";
+            return getColumn() + " is not null";
         }
     };
+
+    public abstract String getColumn();
 
     public abstract String getFilterCondition();
 }

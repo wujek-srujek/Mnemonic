@@ -8,7 +8,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 
@@ -20,38 +24,61 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final int DB_VERSION = 1;
 
-    private static final String SET_TASK_DATA_FORMAT = "update " + Db.Task._TABLE_NAME + " set %s=? where " + Db.Task._ID + "=?";
+    private static final String FILTER_CHECK_FORMAT =
+            "exists(select " + Db.Task._ID + " from " + Db.Task._TABLE_NAME + " where %s limit 1) as %s";
 
-    private static final String SET_TASK_FAVORITE = String.format(SET_TASK_DATA_FORMAT, Db.Task.FAVORITE);
+    private static final String TEST_QUALIFIER_FORMAT = " and " + Db.Task._TEST_ID + "=test." + Db.Test._ID;
 
-    private static final String SET_TASK_COMMENT = String.format(SET_TASK_DATA_FORMAT, Db.Task.COMMENT);
+    private static final String TASK_FILTER_CHECKS;
 
-    private static final String SELECT_TEST_GROUPS = "select * from " + Db.TestGroup._TABLE_NAME +
-            " order by " + Db.TestGroup._ID + " desc";
+    private static final String TEST_FILTER_CHECKS;
+
+    private static final String TASK_PROPERTY_UPDATE_FORMAT =
+            "update " + Db.Task._TABLE_NAME + " set %s=? where " + Db.Task._ID + "=?";
+
+    private static final Map<TaskFilter, String> TASK_PROPERTY_UPDATES = new EnumMap<>(TaskFilter.class);
+
+    static {
+        String separator = ", ";
+        StringBuilder taskFilterChecks = new StringBuilder();
+        StringBuilder testFilterChecks = new StringBuilder();
+        for (TaskFilter taskFilter : TaskFilter.values()) {
+            String taskWhere = taskFilter.getFilterCondition();
+            taskFilterChecks.append(String.format(FILTER_CHECK_FORMAT, taskWhere, taskFilter.getColumn())).append(separator);
+
+            String testWhere = taskWhere + TEST_QUALIFIER_FORMAT;
+            testFilterChecks.append(String.format(FILTER_CHECK_FORMAT, testWhere, taskFilter.getColumn())).append(separator);
+
+            if (taskFilter != TaskFilter.ALL) {
+                TASK_PROPERTY_UPDATES.put(taskFilter, String.format(TASK_PROPERTY_UPDATE_FORMAT, taskFilter.getColumn()));
+            }
+        }
+        taskFilterChecks.setLength(taskFilterChecks.length() - separator.length());
+        testFilterChecks.setLength(testFilterChecks.length() - separator.length());
+
+        TASK_FILTER_CHECKS = taskFilterChecks.toString();
+        TEST_FILTER_CHECKS = testFilterChecks.toString();
+    }
+
+    private static final String SELECT_TEST_GROUPS =
+            "select * from " + Db.TestGroup._TABLE_NAME + " order by " + Db.TestGroup._ID + " desc";
 
     private static final String SELECT_TEST_COUNT = "select count(*) from " + Db.Test._TABLE_NAME;
 
-    private static final String TEST_PROPERTY_CHECK = "exists(select " + Db.Task._ID + " from " + Db.Task._TABLE_NAME +
-            " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + " and %s limit 1) as %s";
+    private static final String SELECT_TESTS_FOR_GROUP =
+            "select test.*, (select count(*) from " + Db.Task._TABLE_NAME + " where " +
+                    Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " + Db.Test._TASK_COUNT + ", "
+                    + TEST_FILTER_CHECKS + ", (select count(" + Db.Task.ANSWER + ") from " +
+                    Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " +
+                    Db.Test._ANSWER_COUNT + " from " + Db.Test._TABLE_NAME + " as test where test." +
+                    Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
 
-    private static final String TEST_HAS_FAVORITE_CHECK =
-            String.format(TEST_PROPERTY_CHECK, TaskFilter.FAVORITE.getFilterCondition(), Db.Task.FAVORITE);
+    private static final String SELECT_TASK_FILTERS_FOR_TEST =
+            "select " + TEST_FILTER_CHECKS + " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._ID + "=?";
 
-    private static final String TEST_HAS_COMMENTED_CHECK =
-            String.format(TEST_PROPERTY_CHECK, TaskFilter.COMMENTED.getFilterCondition(), Db.Task.COMMENT);
-
-    private static final String SELECT_TESTS_FOR_GROUP = "select test.*, (select count(*) from " +
-            Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " + Db.Task._COUNT + ", " +
-            TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK + ", (select count(" + Db.Task.ANSWER + ") from " +
-            Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " +
-            Db.Test._ANSWER_COUNT + " from " + Db.Test._TABLE_NAME + " as test where test." +
-            Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
-
-    private static final String SELECT_TEST_FOR_ID = "select " + TEST_HAS_FAVORITE_CHECK + ", " + TEST_HAS_COMMENTED_CHECK +
-            " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._ID + "=?";
-
-    private static final String SELECT_TASKS_FOR_TEST_FORMAT = "select * from " + Db.Task._TABLE_NAME + " where " +
-            Db.Task._TEST_ID + "=? and %s order by " + Db.Task._ID + " asc";
+    private static final String SELECT_TASKS_FOR_TEST_FMT =
+            "select * from " + Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID +
+                    "=? and %s order by " + Db.Task._ID + " asc";
 
     private final Context context;
 
@@ -125,7 +152,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Test._TABLE_NAME, null, values);
 
-        return new Test(_id, name, description, 0, 0, false, false);
+        return new Test(_id, name, description, 0, 0, EnumSet.noneOf(TaskFilter.class));
     }
 
     public Task addTask(Test test, String question, String answer) {
@@ -136,20 +163,28 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Task._TABLE_NAME, null, values);
 
-        ++test.taskCount;
-        test.pagesCount += answer != null ? 2 : 1;
+        Task task = new Task(_id, question, answer, false, null);
 
-        return new Task(_id, question, answer, false, null);
+        ++test.taskCount;
+        test.pagesCount += task.getPagesCount();
+        test.availableTaskFilters.add(TaskFilter.ALL);
+
+        return task;
     }
 
     public void setFavorite(Task task, boolean favorite) {
-        getWritableDatabase().execSQL(SET_TASK_FAVORITE, new String[]{"" + (favorite ? 1 : 0), "" + task._id});
+        setProperty(task, TaskFilter.FAVORITE, "" + (favorite ? 1 : 0));
         task.favorite = favorite;
     }
 
     public void setComment(Task task, String comment) {
-        getWritableDatabase().execSQL(SET_TASK_COMMENT, new String[]{comment, "" + task._id});
+        setProperty(task, TaskFilter.COMMENTED, comment);
         task.comment = comment;
+    }
+
+    private void setProperty(Task task, TaskFilter taskFilter, String value) {
+        String updateSql = TASK_PROPERTY_UPDATES.get(taskFilter);
+        getWritableDatabase().execSQL(updateSql, new String[]{value, "" + task._id});
     }
 
     public List<TestGroup> getTestGroups() {
@@ -182,12 +217,16 @@ public class DbHelper extends SQLiteOpenHelper {
             long _id = cursor.getLong(cursor.getColumnIndex(Db.Test._ID));
             String name = cursor.getString(cursor.getColumnIndex(Db.Test.NAME));
             String description = cursor.getString(cursor.getColumnIndex(Db.Test.DESCRIPTION));
-            int taskCount = cursor.getInt(cursor.getColumnIndex(Db.Task._COUNT));
+            int taskCount = cursor.getInt(cursor.getColumnIndex(Db.Test._TASK_COUNT));
             int answerCount = cursor.getInt(cursor.getColumnIndex(Db.Test._ANSWER_COUNT));
-            boolean hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
-            boolean hasCommented = cursor.getInt(cursor.getColumnIndex(Db.Task.COMMENT)) != 0;
+            Set<TaskFilter> availableTaskFilters = EnumSet.noneOf(TaskFilter.class);
+            for (TaskFilter taskFilter : TaskFilter.values()) {
+                if (cursor.getInt(cursor.getColumnIndex(taskFilter.getColumn())) != 0) {
+                    availableTaskFilters.add(taskFilter);
+                }
+            }
 
-            tests.add(new Test(_id, name, description, taskCount, taskCount + answerCount, hasFavorite, hasCommented));
+            tests.add(new Test(_id, name, description, taskCount, taskCount + answerCount, availableTaskFilters));
         }
         cursor.close();
 
@@ -195,15 +234,20 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void refreshTest(Test test) {
-        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_FOR_ID, new String[]{"" + test._id});
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TASK_FILTERS_FOR_TEST, new String[]{"" + test._id});
         cursor.moveToNext();
-        test.hasFavorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
-        test.hasCommented = cursor.getInt(cursor.getColumnIndex(Db.Task.COMMENT)) != 0;
+        Set<TaskFilter> availableTaskFilters = EnumSet.noneOf(TaskFilter.class);
+        for (TaskFilter taskFilter : TaskFilter.values()) {
+            if (cursor.getInt(cursor.getColumnIndex(taskFilter.getColumn())) != 0) {
+                availableTaskFilters.add(taskFilter);
+            }
+        }
+        test.availableTaskFilters = availableTaskFilters;
         cursor.close();
     }
 
     public List<Task> getTasks(Test test, TaskFilter taskFilter) {
-        String query = String.format(SELECT_TASKS_FOR_TEST_FORMAT, taskFilter.getFilterCondition());
+        String query = String.format(SELECT_TASKS_FOR_TEST_FMT, taskFilter.getFilterCondition());
         Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test._id});
         List<Task> tasks = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
