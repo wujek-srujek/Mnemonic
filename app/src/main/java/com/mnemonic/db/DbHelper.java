@@ -80,6 +80,8 @@ public class DbHelper extends SQLiteOpenHelper {
             "select * from " + Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID +
                     "=? and %s order by " + Db.Task._ID + " asc";
 
+    private static final String TASK_EXISTENCE_CHECK = "select " + TASK_FILTER_CHECKS;
+
     private final Context context;
 
     public DbHelper(Context context) {
@@ -262,5 +264,22 @@ public class DbHelper extends SQLiteOpenHelper {
         cursor.close();
 
         return tasks;
+    }
+
+    public Set<TaskFilter> getExistingTaskFilters() {
+        Set<TaskFilter> existingTasksFilters = EnumSet.noneOf(TaskFilter.class);
+
+        Cursor cursor = getReadableDatabase().rawQuery(TASK_EXISTENCE_CHECK, null);
+        cursor.moveToNext();
+
+        for (TaskFilter taskFilter : TaskFilter.values()) {
+            if (cursor.getInt(cursor.getColumnIndex(taskFilter.getColumn())) != 0) {
+                existingTasksFilters.add(taskFilter);
+            }
+        }
+
+        cursor.close();
+
+        return existingTasksFilters;
     }
 }

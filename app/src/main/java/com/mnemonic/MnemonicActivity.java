@@ -133,11 +133,39 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             // single test was started
             testListAdapter.clearSelections();
         }
+
+        invalidateOptionsMenu();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_mnemonic, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Set<TaskFilter> existingTaskFilters = dbHelper.getExistingTaskFilters();
+
+        for (TaskFilter taskFilter : TaskFilter.values()) {
+            int menuItemId;
+            switch (taskFilter) {
+                case FAVORITE:
+                    menuItemId = R.id.mnemonic_action_favorite;
+                    break;
+
+                case COMMENTED:
+                    menuItemId = R.id.mnemonic_action_commented;
+                    break;
+
+                default:
+                    menuItemId = R.id.mnemonic_action_all;
+                    break;
+            }
+            MenuItem menuItem = menu.findItem(menuItemId);
+            menuItem.setVisible(existingTaskFilters.contains(taskFilter));
+        }
 
         return true;
     }
