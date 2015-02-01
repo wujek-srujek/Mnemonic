@@ -47,6 +47,14 @@ public class Task implements Parcelable {
         this.comment = comment;
     }
 
+    public String getQuestion() {
+        return question;
+    }
+
+    public String getAnswer() {
+        return answer;
+    }
+
     public boolean isFavorite() {
         return favorite;
     }

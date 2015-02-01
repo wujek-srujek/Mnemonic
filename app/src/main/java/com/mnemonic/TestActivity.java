@@ -3,6 +3,9 @@ package com.mnemonic;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SearchView;
 import android.widget.Toolbar;
 
 import com.mnemonic.db.DbHelper;
@@ -31,6 +35,10 @@ public class TestActivity extends Activity {
 
     public final static String PAGES_COUNT_EXTRA = "pagesCount";
 
+    public final static String RANDOMIZE_EXTRA = "randomize";
+
+    public final static String START_TASK_INDEX_EXTRA = "startTaskIndex";
+
     private final static String RANDOM_SEED_BUNDLE_KEY = "randomSeed";
 
     private DbHelper dbHelper;
@@ -43,6 +51,8 @@ public class TestActivity extends Activity {
 
     private int pagesCount;
 
+    private boolean randomize;
+
     private long randomSeed;
 
     private TaskPagerAdapter taskPagerAdapter;
@@ -54,22 +64,28 @@ public class TestActivity extends Activity {
         setContentView(R.layout.activity_test);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
+        Intent intent = getIntent();
+
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
-            actionBar.setTitle(getIntent().getStringExtra(TEST_NAME_EXTRA));
+            actionBar.setTitle(intent.getStringExtra(TEST_NAME_EXTRA));
         }
 
         dbHelper = new DbHelper(this);
 
-        orderedTasks = getIntent().getParcelableArrayListExtra(TASKS_EXTRA);
-        pagesCount = getIntent().getIntExtra(PAGES_COUNT_EXTRA, 0);
+        orderedTasks = intent.getParcelableArrayListExtra(TASKS_EXTRA);
+        pagesCount = intent.getIntExtra(PAGES_COUNT_EXTRA, 0);
+        randomize = intent.getBooleanExtra(RANDOMIZE_EXTRA, false);
+        int startTaskIndex = intent.getIntExtra(START_TASK_INDEX_EXTRA, 0);
 
-        if (savedInstanceState != null) {
-            // recreating the state after destroy in the background
-            randomSeed = savedInstanceState.getLong(RANDOM_SEED_BUNDLE_KEY, 0);
-        } else {
-            // fresh instance
-            randomSeed = System.nanoTime();
+        if (randomize) {
+            if (savedInstanceState != null) {
+                // recreating the state after destroy in the background
+                randomSeed = savedInstanceState.getLong(RANDOM_SEED_BUNDLE_KEY, 0);
+            } else {
+                // fresh instance
+                randomSeed = System.nanoTime();
+            }
         }
 
         taskPager = (ViewPager) findViewById(R.id.task_pager);
@@ -101,7 +117,7 @@ public class TestActivity extends Activity {
             }
         });
 
-        initPager();
+        initPager(startTaskIndex);
     }
 
     @Override
@@ -122,6 +138,10 @@ public class TestActivity extends Activity {
         }
 
         getMenuInflater().inflate(R.menu.menu_test, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.test_action_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(this, TaskSearchActivity.class)));
 
         return true;
     }
@@ -163,7 +183,9 @@ public class TestActivity extends Activity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putLong(RANDOM_SEED_BUNDLE_KEY, randomSeed);
+        if (randomize) {
+            outState.putLong(RANDOM_SEED_BUNDLE_KEY, randomSeed);
+        }
     }
 
     public void restartTest(MenuItem menuItem) {
@@ -178,17 +200,28 @@ public class TestActivity extends Activity {
         editComment();
     }
 
-    private void initPager() {
-        List<Task> shuffledTasks = new ArrayList<>(orderedTasks);
-        Collections.shuffle(shuffledTasks, new Random(randomSeed));
+    private void initPager(int startTaskIndex) {
+        List<Task> usedTasks;
+        if (randomize) {
+            usedTasks = new ArrayList<>(orderedTasks);
+            Collections.shuffle(usedTasks, new Random(randomSeed));
+        } else {
+            usedTasks = orderedTasks;
+        }
         List<TaskPage> taskPages = new ArrayList<>(pagesCount);
+        int pageIndex = 0;
         int i = 0;
-        for (Task task : shuffledTasks) {
+        for (Task task : usedTasks) {
+            if (i == startTaskIndex) {
+                pageIndex = taskPages.size();
+            }
             taskPages.addAll(task.getPages(++i));
         }
 
         taskPagerAdapter = new TaskPagerAdapter(getLayoutInflater(), taskPages);
         taskPager.setAdapter(taskPagerAdapter);
+
+        taskPager.setCurrentItem(pageIndex, false);
     }
 
     private void updateTaskInfo() {
@@ -224,7 +257,7 @@ public class TestActivity extends Activity {
 
     private void restartTest() {
         randomSeed = System.nanoTime();
-        initPager();
+        initPager(0);
         updateTaskInfo();
     }
 

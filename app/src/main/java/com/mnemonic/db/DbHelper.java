@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
@@ -82,6 +83,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String TASK_EXISTENCE_CHECK = "select " + TASK_FILTER_CHECKS;
 
+    private static final String TASK_FULL_TEXT_SEARCH = "select task.* from " + Db.Task._TABLE_NAME + " as task inner join " +
+            Db.TaskFullTextSearch._TABLE_NAME + " as taskfts on task." + Db.Task._ID + "=" + "taskfts." + Db.TaskFullTextSearch._DOC_ID +
+            " where taskfts." + Db.TaskFullTextSearch._TABLE_NAME + " match ?";
+
     private final Context context;
 
     public DbHelper(Context context) {
@@ -102,6 +107,12 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(Db.TestGroup._CREATE_TABLE);
         db.execSQL(Db.Test._CREATE_TABLE);
         db.execSQL(Db.Task._CREATE_TABLE);
+        db.execSQL(Db.TaskFullTextSearch._CREATE_TABLE);
+
+        db.execSQL(Db.TaskFullTextSearch.Triggers.AFTER_INSERT);
+        db.execSQL(Db.TaskFullTextSearch.Triggers.BEFORE_UPDATE);
+        db.execSQL(Db.TaskFullTextSearch.Triggers.AFTER_UPDATE);
+        db.execSQL(Db.TaskFullTextSearch.Triggers.BEFORE_DELETE);
     }
 
     @Override
@@ -253,13 +264,7 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test._id});
         List<Task> tasks = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
-            long _id = cursor.getLong(cursor.getColumnIndex(Db.Task._ID));
-            String question = cursor.getString(cursor.getColumnIndex(Db.Task.QUESTION));
-            String answer = cursor.getString(cursor.getColumnIndex(Db.Task.ANSWER));
-            boolean favorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
-            String comment = cursor.getString(cursor.getColumnIndex(Db.Task.COMMENT));
-
-            tasks.add(new Task(_id, question, answer, favorite, comment));
+            tasks.add(taskFromCursor(cursor));
         }
         cursor.close();
 
@@ -281,5 +286,32 @@ public class DbHelper extends SQLiteOpenHelper {
         cursor.close();
 
         return existingTasksFilters;
+    }
+
+    public List<Task> getTasksForQuery(String query) throws SearchException {
+        Cursor cursor;
+        List<Task> tasks;
+        try {
+            cursor = getReadableDatabase().rawQuery(TASK_FULL_TEXT_SEARCH, new String[]{query});
+            tasks = new ArrayList<>(cursor.getCount());
+        } catch (SQLiteException e) {
+            throw new SearchException(e);
+        }
+        while (cursor.moveToNext()) {
+            tasks.add(taskFromCursor(cursor));
+        }
+        cursor.close();
+
+        return tasks;
+    }
+
+    private Task taskFromCursor(Cursor cursor) {
+        long _id = cursor.getLong(cursor.getColumnIndex(Db.Task._ID));
+        String question = cursor.getString(cursor.getColumnIndex(Db.Task.QUESTION));
+        String answer = cursor.getString(cursor.getColumnIndex(Db.Task.ANSWER));
+        boolean favorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
+        String comment = cursor.getString(cursor.getColumnIndex(Db.Task.COMMENT));
+
+        return new Task(_id, question, answer, favorite, comment);
     }
 }

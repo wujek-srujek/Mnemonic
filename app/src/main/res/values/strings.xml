@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">Mnemonic</string>
+    <string name="action_search">Search tasks</string>
     <string name="action_browse">Browse</string>
     <string name="action_all_tasks">All tasks</string>
     <string name="action_all_favorite">All favorite</string>
@@ -23,5 +24,8 @@
     <string name="add_comment_hint">Add your comment</string>
     <string name="action_apply">Apply</string>
     <string name="action_cancel_delete">Cancel/delete</string>
+    <string name="invalid_query">Invalid search query</string>
+    <string name="no_results_warning">No results found for the specified search criteria</string>
+    <string name="search_results_test_name">&lt;Search results&gt;</string>
 
 </resources>

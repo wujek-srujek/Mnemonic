@@ -75,6 +75,46 @@ public final class Db {
                 COMMENT + " text)";
     }
 
+    public final static class TaskFullTextSearch {
+
+        private TaskFullTextSearch() {
+            // nope
+        }
+
+        static final String _TABLE_NAME = "task_full_text_search";
+
+        static final String _DOC_ID = "docid";
+
+        static final String _CREATE_TABLE = "create virtual table " + _TABLE_NAME + " using fts4(content=" + Task._TABLE_NAME +
+                ", " + Task.QUESTION + ", " + Task.ANSWER + ", tokenize=porter)";
+
+        static class Triggers {
+
+            private Triggers() {
+                // nope
+            }
+
+            private static final String AFTER_FMT = "create trigger " + Task._TABLE_NAME + "_after_%1$s after %1$s %2$s on "
+                    + Task._TABLE_NAME + " begin insert into " + TaskFullTextSearch._TABLE_NAME + "(" +
+                    TaskFullTextSearch._DOC_ID + ", " + Task.QUESTION + ", " + Task.ANSWER + ") values(new." +
+                    Task._ID + ", new." + Task.QUESTION + ", new." + Task.ANSWER + "); end";
+
+            private static final String BEFORE_FMT = "create trigger " + Task._TABLE_NAME + "_before_%1$s before %1$s %2$s on "
+                    + Task._TABLE_NAME + " begin delete from " + TaskFullTextSearch._TABLE_NAME + " where "
+                    + TaskFullTextSearch._DOC_ID + "=old." + Task._ID + "; end";
+
+            private static final String RELEVANT_UPDATE_COLUMNS = "of " + Task.QUESTION + ", " + Task.ANSWER;
+
+            static final String AFTER_INSERT = String.format(AFTER_FMT, "insert", "");
+
+            static final String BEFORE_UPDATE = String.format(BEFORE_FMT, "update", RELEVANT_UPDATE_COLUMNS);
+
+            static final String AFTER_UPDATE = String.format(AFTER_FMT, "update", RELEVANT_UPDATE_COLUMNS);
+
+            static final String BEFORE_DELETE = String.format(BEFORE_FMT, "delete", "");
+        }
+    }
+
     private Db() {
         // nope
     }

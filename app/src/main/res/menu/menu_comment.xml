@@ -20,4 +20,5 @@
             android:title="@string/action_apply"/>
 
     </group>
+
 </menu>

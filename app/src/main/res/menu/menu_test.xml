@@ -4,17 +4,25 @@
       tools:context=".TestActivity">
 
     <item
+        android:id="@+id/test_action_search"
+        android:actionViewClass="android.widget.SearchView"
+        android:icon="@drawable/ic_action_search"
+        android:orderInCategory="100"
+        android:showAsAction="collapseActionView|ifRoom"
+        android:title="@string/action_search"/>
+
+    <item
         android:id="@+id/test_action_comment"
         android:onClick="editComment"
-        android:orderInCategory="100"
+        android:orderInCategory="200"
         android:showAsAction="ifRoom"
         android:title="@string/action_edit_comment"/>
 
     <item
         android:icon="@drawable/ic_action_restart"
         android:onClick="restartTest"
-        android:orderInCategory="200"
-        android:showAsAction="ifRoom"
+        android:orderInCategory="300"
+        android:showAsAction="never"
         android:title="@string/action_restart_test"/>
 
 </menu>

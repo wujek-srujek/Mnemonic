@@ -2,6 +2,9 @@ package com.mnemonic;
 
 
 import android.app.Activity;
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -18,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SearchView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
@@ -96,28 +100,27 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             return;
         }
 
-        if (testListAdapter.getSelectionCount() > 0) {
-            // the tests might have changed, e.g. all favorites may have been deselected etc.
-            // refresh the tests and their visible views
-            for (int position : testListAdapter.getSelectionPositions()) {
-                Test test = testListAdapter.getItem(position);
-                TaskFilter taskFilter = testListAdapter.getSelection(position);
-                Set<TaskFilter> previouslyAvailableTaskFilters = test.getAvailableTaskFilters();
+        // the tests might have changed, e.g. all favorites may have been deselected etc.
+        // refresh the tests and their visible views
+        // consider all tests as we might be coming back from search
+        for (int i = 0; i < testListAdapter.getItemCount(); ++i) {
+            Test test = testListAdapter.getItem(i);
+            TaskFilter taskFilter = testListAdapter.getSelection(i);
+            Set<TaskFilter> previouslyAvailableTaskFilters = test.getAvailableTaskFilters();
 
-                // refresh test information
-                dbHelper.refreshTest(test);
+            // refresh test information
+            dbHelper.refreshTest(test);
 
-                Set<TaskFilter> availableTaskFilters = test.getAvailableTaskFilters();
-                // check if the test view is still valid, i.e. if all previous filters are still available
-                if (!availableTaskFilters.equals(previouslyAvailableTaskFilters)) {
-                    if (!availableTaskFilters.contains(taskFilter)) {
-                        // the previously chosen filter is not available any longer
-                        // so clear it; the view is refreshed as side effect
-                        testListAdapter.clearSelection(position);
-                    } else {
-                        // some other filter is not available, just refresh
-                        testList.getAdapter().notifyItemChanged(position);
-                    }
+            Set<TaskFilter> availableTaskFilters = test.getAvailableTaskFilters();
+            // check if the test view is still valid, i.e. if all previous filters are still available
+            if (!availableTaskFilters.equals(previouslyAvailableTaskFilters)) {
+                if (!availableTaskFilters.contains(taskFilter)) {
+                    // the previously chosen filter is not available any longer
+                    // so clear it; the view is refreshed as side effect
+                    testListAdapter.clearSelection(i);
+                } else {
+                    // some other filter is not available, just refresh
+                    testList.getAdapter().notifyItemChanged(i);
                 }
             }
         }
@@ -140,6 +143,10 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_mnemonic, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.mnemonic_action_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(this, TaskSearchActivity.class)));
 
         return true;
     }
@@ -166,6 +173,9 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             MenuItem menuItem = menu.findItem(menuItemId);
             menuItem.setVisible(existingTaskFilters.contains(taskFilter));
         }
+
+        MenuItem menuItem = menu.findItem(R.id.mnemonic_action_search);
+        menuItem.setVisible(existingTaskFilters.contains(TaskFilter.ALL));
 
         return true;
     }
@@ -387,6 +397,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             intent.putExtra(TestActivity.TEST_NAME_EXTRA, testName);
             intent.putExtra(TestActivity.TASKS_EXTRA, tasks);
             intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);
+            intent.putExtra(TestActivity.RANDOMIZE_EXTRA, true);
 
             startActivity(intent);
         }
