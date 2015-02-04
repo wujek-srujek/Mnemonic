@@ -21,8 +21,9 @@
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar"
         android:gravity="center"
+        android:padding="@dimen/spacing_big"
         android:text="@string/empty_test_warning"
-        android:textAppearance="?attr/textAppearanceExtraLarge"
+        android:textAppearance="?android:attr/textAppearanceLarge"
         android:visibility="gone"/>
 
     <com.mnemonic.view.FloatingActionImageButton
@@ -31,8 +32,8 @@
         android:layout_height="@dimen/fab_size"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginBottom="@dimen/padding_big"
-        android:layout_marginEnd="@dimen/padding_big"
+        android:layout_marginBottom="@dimen/spacing_big"
+        android:layout_marginEnd="@dimen/spacing_big"
         android:onClick="toggleFavorite"/>
 
 </RelativeLayout>

@@ -6,10 +6,10 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/padding_small"
-    android:paddingEnd="@dimen/padding_big"
-    android:paddingStart="@dimen/padding_big"
-    android:paddingTop="@dimen/padding_small">
+    android:paddingBottom="@dimen/spacing_small"
+    android:paddingEnd="@dimen/spacing_big"
+    android:paddingStart="@dimen/spacing_big"
+    android:paddingTop="@dimen/spacing_small">
 
     <TextView
         android:id="@+id/task_list_item_question_label"

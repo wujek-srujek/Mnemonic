@@ -3,8 +3,5 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:gravity="center"
-          android:paddingBottom="@dimen/padding_small"
-          android:paddingEnd="@dimen/padding_big"
-          android:paddingStart="@dimen/padding_big"
-          android:paddingTop="@dimen/padding_small"
+          android:padding="@dimen/spacing_big"
           android:textAppearance="?attr/textAppearanceExtraLarge"/>

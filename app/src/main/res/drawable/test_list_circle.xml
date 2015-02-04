@@ -4,8 +4,8 @@
     android:shape="oval">
 
     <stroke
-        android:color="?android:attr/colorAccent"
-        android:width="1dp"/>
+        android:width="1dp"
+        android:color="?android:attr/colorAccent"/>
 
     <size
         android:width="@dimen/test_item_icon_size"

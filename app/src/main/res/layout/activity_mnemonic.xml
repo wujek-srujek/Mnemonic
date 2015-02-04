@@ -23,6 +23,7 @@
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar"
         android:gravity="center"
+        android:padding="@dimen/spacing_big"
         android:text="@string/empty_test_list_warning"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:visibility="gone"/>
@@ -33,8 +34,8 @@
         android:layout_height="@dimen/fab_size"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginBottom="@dimen/padding_big"
-        android:layout_marginEnd="@dimen/padding_big"
+        android:layout_marginBottom="@dimen/spacing_big"
+        android:layout_marginEnd="@dimen/spacing_big"
         android:onClick="startMultitest"
         android:src="@drawable/ic_action_multitest"
         android:visibility="gone"/>
