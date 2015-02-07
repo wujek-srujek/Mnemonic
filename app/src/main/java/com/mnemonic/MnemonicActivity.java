@@ -54,6 +54,8 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
 
     private RecyclerView testList;
 
+    private View emptyTestListInfoLabel;
+
     private TestListAdapter testListAdapter;
 
     private ImageButton startMultitestButton;
@@ -67,7 +69,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        dbHelper = new DbHelper(this);
+        dbHelper = MnemonicApplication.getDbHelper();
 
         testList = (RecyclerView) findViewById(R.id.test_list);
         RecyclerView.LayoutManager layoutManager =
@@ -75,6 +77,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
                         new LinearLayoutManager(this) : new GridLayoutManager(this, 2);
         testList.setLayoutManager(layoutManager);
 
+        emptyTestListInfoLabel = findViewById(R.id.empty_test_list_info_label);
         startMultitestButton = (ImageButton) findViewById(R.id.start_multitest_button);
 
         initUi();
@@ -174,8 +177,8 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             menuItem.setVisible(existingTaskFilters.contains(taskFilter));
         }
 
-        MenuItem menuItem = menu.findItem(R.id.mnemonic_action_search);
-        menuItem.setVisible(existingTaskFilters.contains(TaskFilter.ALL));
+        MenuItem searchMenuItem = menu.findItem(R.id.mnemonic_action_search);
+        searchMenuItem.setVisible(existingTaskFilters.contains(TaskFilter.ALL));
 
         return true;
     }
@@ -320,10 +323,9 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             tests.addAll(dbHelper.getTests(testGroup));
         }
 
-        View infoLabel = findViewById(R.id.empty_test_list_info_label);
         if (!tests.isEmpty()) {
             testList.setVisibility(View.VISIBLE);
-            infoLabel.setVisibility(View.GONE);
+            emptyTestListInfoLabel.setVisibility(View.GONE);
 
             testListAdapter = new TestListAdapter(tests, getString(R.string.default_test_name));
             testListAdapter.setOnTestClickListener(this);
@@ -331,7 +333,7 @@ public class MnemonicActivity extends Activity implements OnTestClickListener, O
             testList.setAdapter(testListAdapter);
         } else {
             testList.setVisibility(View.GONE);
-            infoLabel.setVisibility(View.VISIBLE);
+            emptyTestListInfoLabel.setVisibility(View.VISIBLE);
         }
     }
 

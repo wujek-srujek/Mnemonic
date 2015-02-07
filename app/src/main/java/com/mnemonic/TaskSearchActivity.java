@@ -52,7 +52,7 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
             actionBar.setDisplayShowTitleEnabled(false);
         }
 
-        dbHelper = new DbHelper(this);
+        dbHelper = MnemonicApplication.getDbHelper();
 
         taskList = (RecyclerView) findViewById(R.id.task_list);
         taskList.setLayoutManager(new LinearLayoutManager(this));

@@ -64,14 +64,14 @@ public class TestActivity extends Activity {
         setContentView(R.layout.activity_test);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
+        dbHelper = MnemonicApplication.getDbHelper();
+
         Intent intent = getIntent();
 
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setTitle(intent.getStringExtra(TEST_NAME_EXTRA));
         }
-
-        dbHelper = new DbHelper(this);
 
         orderedTasks = intent.getParcelableArrayListExtra(TASKS_EXTRA);
         pagesCount = intent.getIntExtra(PAGES_COUNT_EXTRA, 0);

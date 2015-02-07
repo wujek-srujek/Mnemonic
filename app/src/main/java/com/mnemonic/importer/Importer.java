@@ -37,6 +37,7 @@ public class Importer {
                     importTests(
                             dbHelper.addTestGroup(groupName),
                             new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
+
                     return null;
                 }
             });
