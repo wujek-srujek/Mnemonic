@@ -65,14 +65,20 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
 
         @Override
         public void onClick(View v) {
-            onTestClickListener.onTestClick(getPosition(), test, taskFilterForView(v));
+            if (onTestClickListener != null) {
+                onTestClickListener.onTestClick(getPosition(), test, taskFilterForView(v));
+            }
         }
 
         @Override
         public boolean onLongClick(View v) {
-            onTestLongClickListener.onTestLongClick(getPosition(), test, taskFilterForView(v));
+            if (onTestLongClickListener != null) {
+                onTestLongClickListener.onTestLongClick(getPosition(), test, taskFilterForView(v));
 
-            return true;
+                return true;
+            }
+
+            return false;
         }
 
         public void bind(Test test) {
@@ -179,6 +185,23 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
         return tests.get(position);
     }
 
+    public void removeItem(int position) {
+        tests.remove(position);
+        selections.remove(position);
+
+        // move up all selections whose index > position as position doesn't exist any longer
+        for (int i = 0; i < selections.size(); ++i) {
+            int index = selections.keyAt(i);
+            if (index > position) {
+                TaskFilter taskFilter = selections.get(index);
+                selections.put(index - 1, taskFilter);
+                selections.remove(index);
+            }
+        }
+
+        notifyItemRemoved(position);
+    }
+
     public int getSelectionCount() {
         return selections.size();
     }
@@ -203,16 +226,21 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
     }
 
     public void clearSelection(int position) {
-        selections.delete(position);
+        selections.remove(position);
 
         notifyItemChanged(position);
     }
 
     public void clearSelections() {
-        for (int i = 0; i < getSelectionCount(); ++i) {
-            notifyItemChanged(selections.keyAt(i));
+        if (selections.size() == 0) {
+            return;
         }
 
+        int firstIndex = selections.keyAt(0);
+        int lastIndex = selections.keyAt(selections.size() - 1);
+
         selections.clear();
+
+        notifyItemRangeChanged(firstIndex, lastIndex - firstIndex + 1);
     }
 }

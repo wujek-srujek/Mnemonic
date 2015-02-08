@@ -37,6 +37,8 @@ public final class Db {
 
         public static final String DESCRIPTION = "description";
 
+        public static final String ENABLED = "enabled";
+
         public static final String _TASK_COUNT = "_task_count";
 
         public static final String _ANSWER_COUNT = "_answer_count";
@@ -45,7 +47,8 @@ public final class Db {
                 _ID + " integer primary key, " +
                 _TEST_GROUP_ID + " integer not null references " + TestGroup._TABLE_NAME + " on delete cascade, " +
                 NAME + " text, " +
-                DESCRIPTION + " text)";
+                DESCRIPTION + " text, " +
+                ENABLED + " integer not null default 1)";
     }
 
     public final static class Task implements BaseColumns {

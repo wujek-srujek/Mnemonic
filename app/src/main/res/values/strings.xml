@@ -4,6 +4,7 @@
     <string name="app_name">Mnemonic</string>
     <string name="action_search">Search tasks</string>
     <string name="action_browse">Browse</string>
+    <string name="action_enable_all_tests">Enable all tests</string>
     <string name="action_all_tasks">All tasks</string>
     <string name="action_all_favorite">All favorite</string>
     <string name="action_all_commented">All commented</string>

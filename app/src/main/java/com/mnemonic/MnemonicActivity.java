@@ -1,6 +1,8 @@
 package com.mnemonic;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.ComponentName;
@@ -12,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -32,6 +35,7 @@ import com.mnemonic.db.Test;
 import com.mnemonic.db.TestGroup;
 import com.mnemonic.importer.ImportException;
 import com.mnemonic.importer.Importer;
+import com.mnemonic.view.HorizontallySwipeableRecyclerView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +44,9 @@ import java.util.List;
 import java.util.Set;
 
 
-public class MnemonicActivity extends Activity implements ActionMode.Callback,
-        TestListAdapter.OnTestClickListener, TestListAdapter.OnTestLongClickListener {
+public class MnemonicActivity extends Activity implements
+        TestListAdapter.OnTestClickListener, TestListAdapter.OnTestLongClickListener,
+        ActionMode.Callback, HorizontallySwipeableRecyclerView.SwipeListener {
 
     private static final String TAG = MnemonicActivity.class.getSimpleName();
 
@@ -51,9 +56,11 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
 
     private final static String SELECTIONS_BUNDLE_KEY = "selections";
 
+    private long afterSwipeAnimationDuration;
+
     private DbHelper dbHelper;
 
-    private RecyclerView testList;
+    private HorizontallySwipeableRecyclerView testList;
 
     private View emptyTestListInfoLabel;
 
@@ -70,13 +77,24 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
+        afterSwipeAnimationDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
         dbHelper = MnemonicApplication.getDbHelper();
 
-        testList = (RecyclerView) findViewById(R.id.test_list);
+        testList = (HorizontallySwipeableRecyclerView) findViewById(R.id.test_list);
         RecyclerView.LayoutManager layoutManager =
                 getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
                         new LinearLayoutManager(this) : new GridLayoutManager(this, 2);
         testList.setLayoutManager(layoutManager);
+        testList.setSwipeListener(this);
+        testList.setItemAnimator(new DefaultItemAnimator() {
+
+            @Override
+            public void onRemoveFinished(RecyclerView.ViewHolder item) {
+                // at this point, the remove animation is done
+                onDismissComplete(item.itemView);
+            }
+        });
 
         emptyTestListInfoLabel = findViewById(R.id.empty_test_list_info_label);
         startMultitestButton = (ImageButton) findViewById(R.id.start_multitest_button);
@@ -130,14 +148,9 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
         }
 
         if (multitestMode != null) {
-            int selectionCount = testListAdapter.getSelectionCount();
-            if (selectionCount > 0) {
-                updateMultitestTitle(selectionCount);
-            } else {
-                multitestMode.finish();
-            }
+            updateMultitestMode();
         } else {
-            // single test was started
+            // single test was started or activity initially shown
             testListAdapter.clearSelections();
         }
 
@@ -180,6 +193,9 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
 
         MenuItem searchMenuItem = menu.findItem(R.id.mnemonic_action_search);
         searchMenuItem.setVisible(existingTaskFilters.contains(TaskFilter.ALL));
+
+        MenuItem enableAllTestsMenuItem = menu.findItem(R.id.mnemonic_action_enable_all_tests);
+        enableAllTestsMenuItem.setVisible(dbHelper.hasDisabledTests());
 
         return true;
     }
@@ -225,6 +241,10 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
                 TaskFilter.COMMENTED);
     }
 
+    public void enableAllTests(MenuItem menuItem) {
+        enableAllTests();
+    }
+
     public void browse(MenuItem menuItem) {
         browse();
     }
@@ -259,17 +279,17 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
             testListAdapter.setSelection(position, taskFilter);
         }
 
+        updateMultitestMode();
+    }
+
+    private void updateMultitestMode() {
         int selectionCount = testListAdapter.getSelectionCount();
         if (selectionCount > 0) {
-            updateMultitestTitle(selectionCount);
+            multitestMode.setTitle(String.format(getString(R.string.multitest_mode_title), selectionCount));
         } else {
             // nothing selected any more, end multitest mode
             multitestMode.finish();
         }
-    }
-
-    private void updateMultitestTitle(int selectionCount) {
-        multitestMode.setTitle(String.format(getString(R.string.multitest_mode_title), selectionCount));
     }
 
     @Override
@@ -291,11 +311,52 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
 
     @Override
     public void onDestroyActionMode(ActionMode mode) {
-        testListAdapter.clearSelections();
-
         multitestMode = null;
 
+        testListAdapter.clearSelections();
+
         startMultitestButton.setVisibility(View.GONE);
+    }
+
+    @Override
+    public boolean isSwipeable(View view, int position) {
+        return true;
+    }
+
+    @Override
+    public void onSwipeFeedback(View view, int position, float deltaX) {
+        view.setTranslationX(deltaX);
+        view.setAlpha(1 - Math.abs(deltaX / view.getWidth()));
+    }
+
+    @Override
+    public void onSwipeCancel(View view, int position) {
+        view.animate().translationX(0.F).alpha(1.F).setDuration(afterSwipeAnimationDuration).start();
+    }
+
+    @Override
+    public void onSwipe(final View view, final int position, boolean right) {
+        // disable swiping while this dismissal is being processed
+        testList.setSwipingEnabled(false);
+
+        float translationX = right ? view.getWidth() : -view.getWidth();
+        view.animate().translationX(translationX).alpha(0.F).
+                setDuration(afterSwipeAnimationDuration).setListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                disableTest(position);
+            }
+        }).start();
+    }
+
+    private void onDismissComplete(View view) {
+        // reset the view after it is removed to be eligible for reuse
+        view.setAlpha(1.F);
+        view.setTranslationX(0.F);
+
+        // enable swiping again after dismissal has been processed
+        testList.setSwipingEnabled(true);
     }
 
     public void startMultitest(View view) {
@@ -336,6 +397,12 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
             testList.setVisibility(View.GONE);
             emptyTestListInfoLabel.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void enableAllTests() {
+        dbHelper.enableAllTests();
+
+        initUi();
     }
 
     private void browse() {
@@ -403,6 +470,17 @@ public class MnemonicActivity extends Activity implements ActionMode.Callback,
             intent.putExtra(TestActivity.RANDOMIZE_EXTRA, true);
 
             startActivity(intent);
+        }
+    }
+
+    private void disableTest(int position) {
+        Test test = testListAdapter.getItem(position);
+        dbHelper.setTestEnabled(test, false);
+
+        testListAdapter.removeItem(position);
+        if (multitestMode != null) {
+            // maybe a selected test was disabled
+            updateMultitestMode();
         }
     }
 }

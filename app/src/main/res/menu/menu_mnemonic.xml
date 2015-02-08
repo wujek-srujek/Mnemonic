@@ -36,9 +36,17 @@
         android:title="@string/action_all_tasks"/>
 
     <item
+        android:id="@+id/mnemonic_action_enable_all_tests"
+        android:icon="@drawable/ic_action_enable_all_tests"
+        android:onClick="enableAllTests"
+        android:orderInCategory="500"
+        android:showAsAction="never"
+        android:title="@string/action_enable_all_tests"/>
+
+    <item
         android:icon="@drawable/ic_action_browse"
         android:onClick="browse"
-        android:orderInCategory="500"
+        android:orderInCategory="600"
         android:showAsAction="never"
         android:title="@string/action_browse"/>
 

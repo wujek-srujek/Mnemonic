@@ -13,16 +13,19 @@ public class Test {
 
     private final String description;
 
+    boolean enabled;
+
     int taskCount;
 
     int pagesCount;
 
     Set<TaskFilter> availableTaskFilters;
 
-    Test(long _id, String name, String description, int taskCount, int pagesCount, Set<TaskFilter> availableTaskFilters) {
+    Test(long _id, String name, String description, boolean enabled, int taskCount, int pagesCount, Set<TaskFilter> availableTaskFilters) {
         this._id = _id;
         this.name = name;
         this.description = description;
+        this.enabled = enabled;
         this.taskCount = taskCount;
         this.pagesCount = pagesCount;
         this.availableTaskFilters = availableTaskFilters;
@@ -54,7 +57,7 @@ public class Test {
 
     @Override
     public String toString() {
-        return String.format("%s[name=%s, description=%s, taskCount=%d, pagesCount=%d, availableTaskFilters=%s]",
-                getClass().getSimpleName(), name, description, taskCount, pagesCount, availableTaskFilters);
+        return String.format("%s[name=%s, description=%s, enabled=%b, taskCount=%d, pagesCount=%d, availableTaskFilters=%s]",
+                getClass().getSimpleName(), name, description, enabled, taskCount, pagesCount, availableTaskFilters);
     }
 }

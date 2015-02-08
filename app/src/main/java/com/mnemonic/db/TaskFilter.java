@@ -10,7 +10,7 @@ public enum TaskFilter {
         }
 
         @Override
-        public String getFilterCondition() {
+        public String getFilterCondition(String tableAlias) {
             return "1=1";
         }
     },
@@ -22,8 +22,8 @@ public enum TaskFilter {
         }
 
         @Override
-        public String getFilterCondition() {
-            return getColumn() + "=1";
+        public String getFilterCondition(String tableAlias) {
+            return column(tableAlias) + "=1";
         }
     },
 
@@ -34,12 +34,20 @@ public enum TaskFilter {
         }
 
         @Override
-        public String getFilterCondition() {
-            return getColumn() + " is not null";
+        public String getFilterCondition(String tableAlias) {
+            return column(tableAlias) + " is not null";
         }
     };
 
     public abstract String getColumn();
 
-    public abstract String getFilterCondition();
+    public abstract String getFilterCondition(String tableAlias);
+
+    String column(String tableAlias) {
+        if (tableAlias == null || tableAlias.isEmpty()) {
+            return getColumn();
+        }
+
+        return tableAlias + "." + getColumn();
+    }
 }

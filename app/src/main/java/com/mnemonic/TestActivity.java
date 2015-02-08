@@ -173,7 +173,7 @@ public class TestActivity extends Activity {
             }
 
             Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
-            dbHelper.setComment(currentTask, comment);
+            dbHelper.setTaskComment(currentTask, comment);
 
             invalidateOptionsMenu();
         }
@@ -263,7 +263,7 @@ public class TestActivity extends Activity {
 
     private void toggleFavorite() {
         Task currentTask = taskPagerAdapter.getTask(taskPager.getCurrentItem());
-        dbHelper.setFavorite(currentTask, !currentTask.isFavorite());
+        dbHelper.setTaskFavorite(currentTask, !currentTask.isFavorite());
 
         updateFavoriteState(currentTask);
     }

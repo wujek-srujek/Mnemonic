@@ -26,7 +26,12 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final int DB_VERSION = 1;
 
     private static final String FILTER_CHECK_FORMAT =
-            "exists(select " + Db.Task._ID + " from " + Db.Task._TABLE_NAME + " where %s limit 1) as %s";
+            "exists(select task." + Db.Task._ID + " from " + Db.Task._TABLE_NAME + " as task %s where %s limit 1) as %s";
+
+    private static final String TEST_TASK_JOIN =
+            "inner join " + Db.Test._TABLE_NAME + " as test on task." + Db.Task._TEST_ID + "=test." + Db.Test._ID;
+
+    private static final String TEST_ENABLED_QUALIFIER = " and test.enabled=1";
 
     private static final String TEST_QUALIFIER_FORMAT = " and " + Db.Task._TEST_ID + "=test." + Db.Test._ID;
 
@@ -44,11 +49,13 @@ public class DbHelper extends SQLiteOpenHelper {
         StringBuilder taskFilterChecks = new StringBuilder();
         StringBuilder testFilterChecks = new StringBuilder();
         for (TaskFilter taskFilter : TaskFilter.values()) {
-            String taskWhere = taskFilter.getFilterCondition();
-            taskFilterChecks.append(String.format(FILTER_CHECK_FORMAT, taskWhere, taskFilter.getColumn())).append(separator);
+            String where = taskFilter.getFilterCondition("task");
 
-            String testWhere = taskWhere + TEST_QUALIFIER_FORMAT;
-            testFilterChecks.append(String.format(FILTER_CHECK_FORMAT, testWhere, taskFilter.getColumn())).append(separator);
+            String taskWhere = where + TEST_ENABLED_QUALIFIER;
+            taskFilterChecks.append(String.format(FILTER_CHECK_FORMAT, TEST_TASK_JOIN, taskWhere, taskFilter.getColumn())).append(separator);
+
+            String testWhere = where + TEST_QUALIFIER_FORMAT;
+            testFilterChecks.append(String.format(FILTER_CHECK_FORMAT, "", testWhere, taskFilter.getColumn())).append(separator);
 
             if (taskFilter != TaskFilter.ALL) {
                 TASK_PROPERTY_UPDATES.put(taskFilter, String.format(TASK_PROPERTY_UPDATE_FORMAT, taskFilter.getColumn()));
@@ -61,8 +68,9 @@ public class DbHelper extends SQLiteOpenHelper {
         TEST_FILTER_CHECKS = testFilterChecks.toString();
     }
 
-    private static final String SELECT_TEST_GROUPS =
-            "select * from " + Db.TestGroup._TABLE_NAME + " order by " + Db.TestGroup._ID + " desc";
+    private static final String SELECT_TEST_GROUPS = "select testgroup.* from " + Db.TestGroup._TABLE_NAME +
+            " as testgroup where exists(select " + Db.Test._ID + " from " + Db.Test._TABLE_NAME + " where " +
+            Db.Test._TEST_GROUP_ID + "=testgroup." + Db.TestGroup._ID + " and " + Db.Test.ENABLED + "=1 limit 1)";
 
     private static final String SELECT_TEST_COUNT = "select count(*) from " + Db.Test._TABLE_NAME;
 
@@ -72,7 +80,7 @@ public class DbHelper extends SQLiteOpenHelper {
                     + TEST_FILTER_CHECKS + ", (select count(" + Db.Task.ANSWER + ") from " +
                     Db.Task._TABLE_NAME + " where " + Db.Task._TEST_ID + "=test." + Db.Test._ID + ") as " +
                     Db.Test._ANSWER_COUNT + " from " + Db.Test._TABLE_NAME + " as test where test." +
-                    Db.Test._TEST_GROUP_ID + "=? order by test." + Db.Test._ID + " asc";
+                    Db.Test._TEST_GROUP_ID + "=? and test." + Db.Test.ENABLED + "=1 order by test." + Db.Test._ID + " asc";
 
     private static final String SELECT_TASK_FILTERS_FOR_TEST =
             "select " + TEST_FILTER_CHECKS + " from " + Db.Test._TABLE_NAME + " as test where test." + Db.Test._ID + "=?";
@@ -86,6 +94,14 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String TASK_FULL_TEXT_SEARCH = "select task.* from " + Db.Task._TABLE_NAME + " as task inner join " +
             Db.TaskFullTextSearch._TABLE_NAME + " as taskfts on task." + Db.Task._ID + "=" + "taskfts." + Db.TaskFullTextSearch._DOC_ID +
             " where taskfts." + Db.TaskFullTextSearch._TABLE_NAME + " match ?";
+
+    private static final String TEST_ENABLED_STATE_UPDATE =
+            "update " + Db.Test._TABLE_NAME + " set " + Db.Test.ENABLED + "=? where " + Db.Test._ID + "=?";
+
+    private static final String DISABLED_TESTS_CHECK =
+            "select " + Db.Test._ID + " from " + Db.Test._TABLE_NAME + " where " + Db.Test.ENABLED + "=0 limit 1";
+
+    private static final String ENABLE_ALL_TESTS = "update " + Db.Test._TABLE_NAME + " set " + Db.Test.ENABLED + "=1";
 
     private final Context context;
 
@@ -165,7 +181,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Test._TABLE_NAME, null, values);
 
-        return new Test(_id, name, description, 0, 0, EnumSet.noneOf(TaskFilter.class));
+        return new Test(_id, name, description, true, 0, 0, EnumSet.noneOf(TaskFilter.class));
     }
 
     public Task addTask(Test test, String question, String answer) {
@@ -185,17 +201,19 @@ public class DbHelper extends SQLiteOpenHelper {
         return task;
     }
 
-    public void setFavorite(Task task, boolean favorite) {
-        setProperty(task, TaskFilter.FAVORITE, "" + (favorite ? 1 : 0));
+    public void setTaskFavorite(Task task, boolean favorite) {
+        setTaskProperty(task, TaskFilter.FAVORITE, "" + (favorite ? 1 : 0));
+
         task.favorite = favorite;
     }
 
-    public void setComment(Task task, String comment) {
-        setProperty(task, TaskFilter.COMMENTED, comment);
+    public void setTaskComment(Task task, String comment) {
+        setTaskProperty(task, TaskFilter.COMMENTED, comment);
+
         task.comment = comment;
     }
 
-    private void setProperty(Task task, TaskFilter taskFilter, String value) {
+    private void setTaskProperty(Task task, TaskFilter taskFilter, String value) {
         String updateSql = TASK_PROPERTY_UPDATES.get(taskFilter);
         getWritableDatabase().execSQL(updateSql, new String[]{value, "" + task._id});
     }
@@ -230,16 +248,12 @@ public class DbHelper extends SQLiteOpenHelper {
             long _id = cursor.getLong(cursor.getColumnIndex(Db.Test._ID));
             String name = cursor.getString(cursor.getColumnIndex(Db.Test.NAME));
             String description = cursor.getString(cursor.getColumnIndex(Db.Test.DESCRIPTION));
+            boolean enabled = cursor.getInt(cursor.getColumnIndex(Db.Test.ENABLED)) != 0;
             int taskCount = cursor.getInt(cursor.getColumnIndex(Db.Test._TASK_COUNT));
             int answerCount = cursor.getInt(cursor.getColumnIndex(Db.Test._ANSWER_COUNT));
-            Set<TaskFilter> availableTaskFilters = EnumSet.noneOf(TaskFilter.class);
-            for (TaskFilter taskFilter : TaskFilter.values()) {
-                if (cursor.getInt(cursor.getColumnIndex(taskFilter.getColumn())) != 0) {
-                    availableTaskFilters.add(taskFilter);
-                }
-            }
+            Set<TaskFilter> availableTaskFilters = filtersFromCursor(cursor);
 
-            tests.add(new Test(_id, name, description, taskCount, taskCount + answerCount, availableTaskFilters));
+            tests.add(new Test(_id, name, description, enabled, taskCount, taskCount + answerCount, availableTaskFilters));
         }
         cursor.close();
 
@@ -249,18 +263,12 @@ public class DbHelper extends SQLiteOpenHelper {
     public void refreshTest(Test test) {
         Cursor cursor = getReadableDatabase().rawQuery(SELECT_TASK_FILTERS_FOR_TEST, new String[]{"" + test._id});
         cursor.moveToNext();
-        Set<TaskFilter> availableTaskFilters = EnumSet.noneOf(TaskFilter.class);
-        for (TaskFilter taskFilter : TaskFilter.values()) {
-            if (cursor.getInt(cursor.getColumnIndex(taskFilter.getColumn())) != 0) {
-                availableTaskFilters.add(taskFilter);
-            }
-        }
-        test.availableTaskFilters = availableTaskFilters;
+        test.availableTaskFilters = filtersFromCursor(cursor);
         cursor.close();
     }
 
     public List<Task> getTasks(Test test, TaskFilter taskFilter) {
-        String query = String.format(SELECT_TASKS_FOR_TEST_FMT, taskFilter.getFilterCondition());
+        String query = String.format(SELECT_TASKS_FOR_TEST_FMT, taskFilter.getFilterCondition(null));
         Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test._id});
         List<Task> tasks = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
@@ -272,17 +280,9 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public Set<TaskFilter> getExistingTaskFilters() {
-        Set<TaskFilter> existingTasksFilters = EnumSet.noneOf(TaskFilter.class);
-
         Cursor cursor = getReadableDatabase().rawQuery(TASK_EXISTENCE_CHECK, null);
         cursor.moveToNext();
-
-        for (TaskFilter taskFilter : TaskFilter.values()) {
-            if (cursor.getInt(cursor.getColumnIndex(taskFilter.getColumn())) != 0) {
-                existingTasksFilters.add(taskFilter);
-            }
-        }
-
+        Set<TaskFilter> existingTasksFilters = filtersFromCursor(cursor);
         cursor.close();
 
         return existingTasksFilters;
@@ -313,5 +313,40 @@ public class DbHelper extends SQLiteOpenHelper {
         String comment = cursor.getString(cursor.getColumnIndex(Db.Task.COMMENT));
 
         return new Task(_id, question, answer, favorite, comment);
+    }
+
+    public void setTestEnabled(Test test, boolean enabled) {
+        if (test.enabled == enabled) {
+            return;
+        }
+
+        getWritableDatabase().execSQL(TEST_ENABLED_STATE_UPDATE,
+                new String[]{"" + (enabled ? 1 : 0), "" + test._id});
+
+        test.enabled = enabled;
+    }
+
+    public void enableAllTests() {
+        getWritableDatabase().execSQL(ENABLE_ALL_TESTS);
+    }
+
+    public boolean hasDisabledTests() {
+        Cursor cursor = getReadableDatabase().rawQuery(DISABLED_TESTS_CHECK, null);
+        boolean hasDisabled = cursor.getCount() > 0;
+        cursor.close();
+
+        return hasDisabled;
+    }
+
+    private Set<TaskFilter> filtersFromCursor(Cursor cursor) {
+        Set<TaskFilter> taskFilters = EnumSet.noneOf(TaskFilter.class);
+        for (TaskFilter taskFilter : TaskFilter.values()) {
+            int columnIndex = cursor.getColumnIndex(taskFilter.getColumn());
+            if (columnIndex != -1 && cursor.getInt(columnIndex) != 0) {
+                taskFilters.add(taskFilter);
+            }
+        }
+
+        return taskFilters;
     }
 }
