@@ -17,6 +17,16 @@ import java.util.List;
 
 public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestItemViewHolder> {
 
+    public interface OnTestClickListener {
+
+        void onTestClick(int position, Test test, TaskFilter taskFilter);
+    }
+
+    public interface OnTestLongClickListener {
+
+        void onTestLongClick(int position, Test test, TaskFilter taskFilter);
+    }
+
     class TestItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         final View testItemView;

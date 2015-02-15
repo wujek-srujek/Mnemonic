@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 
-public class TaskSearchActivity extends Activity implements SearchView.OnQueryTextListener, OnTaskClickListener {
+public class TaskSearchActivity extends Activity implements SearchView.OnQueryTextListener, TaskListAdapter.OnTaskClickListener {
 
     private static final String TAG = TaskSearchActivity.class.getSimpleName();
 

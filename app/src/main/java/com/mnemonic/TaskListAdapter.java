@@ -14,6 +14,11 @@ import java.util.List;
 
 public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskItemViewHolder> {
 
+    public interface OnTaskClickListener {
+
+        void onTaskClick(int position);
+    }
+
     class TaskItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         final TextView taskQuestionTextView;

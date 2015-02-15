@@ -40,7 +40,8 @@ import java.util.List;
 import java.util.Set;
 
 
-public class MnemonicActivity extends Activity implements OnTestClickListener, OnTestLongClickListener, ActionMode.Callback {
+public class MnemonicActivity extends Activity implements ActionMode.Callback,
+        TestListAdapter.OnTestClickListener, TestListAdapter.OnTestLongClickListener {
 
     private static final String TAG = MnemonicActivity.class.getSimpleName();
 
