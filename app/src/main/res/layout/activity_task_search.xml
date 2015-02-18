@@ -23,7 +23,7 @@
         android:layout_below="@id/toolbar"
         android:gravity="center"
         android:padding="@dimen/spacing_big"
-        android:text="@string/no_results_warning"
+        android:text="@string/no_results"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:visibility="gone"/>
 

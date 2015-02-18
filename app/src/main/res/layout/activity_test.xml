@@ -22,7 +22,7 @@
         android:layout_below="@id/toolbar"
         android:gravity="center"
         android:padding="@dimen/spacing_big"
-        android:text="@string/empty_test_warning"
+        android:text="@string/no_tasks"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:visibility="gone"/>
 

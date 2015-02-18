@@ -6,12 +6,12 @@ public enum TaskFilter {
     ALL {
         @Override
         String getRawTaskColumn() {
-            return null;
+            return Db.Task._ID;
         }
 
         @Override
         String getSelectExpression(String tablePrefix) {
-            return "count(*)";
+            return "count(" + getTaskColumn(tablePrefix) + ")";
         }
 
         @Override
@@ -22,6 +22,11 @@ public enum TaskFilter {
         @Override
         String getAlias() {
             return "_all_filter";
+        }
+
+        @Override
+        boolean isUpdatable() {
+            return false;
         }
     },
 
@@ -45,6 +50,11 @@ public enum TaskFilter {
         String getAlias() {
             return "_favorite_filter";
         }
+
+        @Override
+        boolean isUpdatable() {
+            return true;
+        }
     },
 
     COMMENTED {
@@ -66,6 +76,11 @@ public enum TaskFilter {
         @Override
         String getAlias() {
             return "_commented_filter";
+        }
+
+        @Override
+        boolean isUpdatable() {
+            return true;
         }
     };
 
@@ -94,4 +109,6 @@ public enum TaskFilter {
     abstract String getCondition(String tablePrefix);
 
     abstract String getAlias();
+
+    abstract boolean isUpdatable();
 }

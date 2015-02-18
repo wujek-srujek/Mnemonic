@@ -2,13 +2,20 @@
 <resources>
 
     <string name="app_name">Mnemonic</string>
+    <string name="action_open_drawer">Open drawer</string>
+    <string name="action_close_drawer">Close drawer</string>
     <string name="action_search">Search tasks</string>
-    <string name="action_browse">Browse</string>
-    <string name="action_enable_all_tests">Enable all tests</string>
     <string name="action_all_tasks">All tasks</string>
     <string name="action_all_favorite">All favorite</string>
     <string name="action_all_commented">All commented</string>
+    <string name="action_enable_all_tests">Enable all tests</string>
+    <string name="action_delete_test_group">Delete test group</string>
+    <string name="action_browse">Browse</string>
+    <string name="alert_delete_test_group">Do you really want to delete the test group?</string>
+    <string name="alert_yes">Yes</string>
+    <string name="alert_no">No</string>
     <string name="meta_name_braces">&lt;%s&gt;</string>
+    <string name="default_test_group_name">&lt;Unnamed test group&gt;</string>
     <string name="default_test_name">&lt;Unnamed test&gt;</string>
     <string name="import_error">Problems occurred, data not imported</string>
     <string name="empty_test_format">Test \'%s\' is empty</string>
@@ -18,15 +25,18 @@
     <string name="answer">Answer</string>
     <string name="info">Info</string>
     <string name="task_info_format">%1$d / %2$d %3$s</string>
-    <string name="empty_test_list_warning">The are no tests in the list, please choose a test file</string>
-    <string name="empty_test_warning">No tasks for the specified criteria</string>
+    <string name="no_test_groups">No test groups</string>
+    <string name="no_test_group_chosen">No test group chosen</string>
+    <string name="all_tests_disabled_in_test_group">All tests in the chosen test group are disabled</string>
+    <string name="no_tests_in_test_group">No tests in the chosen test group</string>
+    <string name="no_tasks">No tasks for the specified criteria</string>
     <string name="action_restart_test">Restart test</string>
     <string name="action_edit_comment">Edit comment</string>
     <string name="add_comment_hint">Add your comment</string>
     <string name="action_apply">Apply</string>
     <string name="action_cancel_delete">Cancel/delete</string>
     <string name="invalid_query">Invalid search query</string>
-    <string name="no_results_warning">No results found for the specified search criteria</string>
+    <string name="no_results">No results found for the specified search criteria</string>
     <string name="search_results_test_name">&lt;Search results&gt;</string>
 
 </resources>

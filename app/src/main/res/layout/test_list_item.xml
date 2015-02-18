@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@color/test_list_item_selections"/>
+            android:textColor="@color/list_item_colors"/>
 
         <TextView
             android:id="@+id/test_list_item_desc_label"
@@ -75,7 +75,7 @@
             android:layout_marginEnd="@dimen/spacing_small"
             android:background="@drawable/ripple_noaccent"
             android:src="@drawable/ic_action_favorite"
-            android:tint="@color/test_list_item_selections"
+            android:tint="@color/list_item_colors"
             tools:ignore="ContentDescription"/>
 
         <ImageView
@@ -85,7 +85,7 @@
             android:layout_marginEnd="@dimen/spacing_small"
             android:background="@drawable/ripple_noaccent"
             android:src="@drawable/ic_action_comment"
-            android:tint="@color/test_list_item_selections"
+            android:tint="@color/list_item_colors"
             tools:ignore="ContentDescription"/>
 
     </LinearLayout>

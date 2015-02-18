@@ -20,6 +20,7 @@ import android.widget.Toolbar;
 import com.mnemonic.db.DbHelper;
 import com.mnemonic.db.SearchException;
 import com.mnemonic.db.Task;
+import com.mnemonic.db.TestGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +41,8 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
 
     private List<Task> foundTasks;
 
+    private TestGroup testGroup;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +61,8 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
         taskList.setLayoutManager(new LinearLayoutManager(this));
 
         noResultsLabel = findViewById(R.id.no_results_info_label);
+
+        testGroup = dbHelper.getCurrentTestGroup();
 
         showSearchResults();
     }
@@ -120,7 +125,7 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
         Intent intent = getIntent();
         String query = intent.getStringExtra(SearchManager.QUERY);
         try {
-            foundTasks = dbHelper.getTasksForQuery(query);
+            foundTasks = dbHelper.getTasksForQuery(query, testGroup);
         } catch (SearchException e) {
             Log.e(TAG, "error searching for tasks", e);
             Toast.makeText(this, R.string.invalid_query, Toast.LENGTH_LONG).show();

@@ -3,28 +3,38 @@ package com.mnemonic;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ActionMode;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
@@ -32,6 +42,7 @@ import com.mnemonic.db.DbHelper;
 import com.mnemonic.db.Task;
 import com.mnemonic.db.TaskFilter;
 import com.mnemonic.db.Test;
+import com.mnemonic.db.TestGroup;
 import com.mnemonic.importer.ImportException;
 import com.mnemonic.importer.Importer;
 import com.mnemonic.view.HorizontallySwipeableRecyclerView;
@@ -39,11 +50,14 @@ import com.mnemonic.view.HorizontallySwipeableRecyclerView;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
 public class MnemonicActivity extends Activity implements
+        TestGroupListAdapter.OnTestGroupClickListener,
         TestListAdapter.OnTestClickListener, TestListAdapter.OnTestLongClickListener,
         ActionMode.Callback, HorizontallySwipeableRecyclerView.SwipeListener {
 
@@ -55,19 +69,37 @@ public class MnemonicActivity extends Activity implements
 
     private static final String SELECTIONS_BUNDLE_KEY = "selections";
 
+    private static final long UI_UPDATE_DELAY = 250;
+
+    private Handler handler;
+
     private long afterSwipeAnimationDuration;
 
     private DbHelper dbHelper;
 
+    private ActionBarDrawerToggle drawerToggle;
+
+    private DrawerLayout drawerLayout;
+
+    private RecyclerView testGroupList;
+
+    private LinearLayoutManager testGroupListLayout;
+
+    private View emptyTestGroupListInfoLabel;
+
+    private TestGroupListAdapter testGroupListAdapter;
+
     private HorizontallySwipeableRecyclerView testList;
 
-    private View emptyTestListInfoLabel;
+    private TextView emptyTestListInfoLabel;
 
     private TestListAdapter testListAdapter;
 
     private ImageButton startMultitestButton;
 
     private ActionMode multitestMode;
+
+    private TestGroup currentTestGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,9 +108,20 @@ public class MnemonicActivity extends Activity implements
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
 
+        handler = new Handler(Looper.getMainLooper());
         afterSwipeAnimationDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
         dbHelper = MnemonicApplication.getDbHelper();
+
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.action_open_drawer, R.string.action_close_drawer);
+        drawerLayout.setDrawerListener(drawerToggle);
+
+        testGroupList = (RecyclerView) findViewById(R.id.test_group_list);
+        testGroupListLayout = new LinearLayoutManager(this);
+        testGroupList.setLayoutManager(testGroupListLayout);
+
+        emptyTestGroupListInfoLabel = findViewById(R.id.empty_test_group_list_info_label);
 
         testList = (HorizontallySwipeableRecyclerView) findViewById(R.id.test_list);
         RecyclerView.LayoutManager layoutManager =
@@ -95,10 +138,11 @@ public class MnemonicActivity extends Activity implements
             }
         });
 
-        emptyTestListInfoLabel = findViewById(R.id.empty_test_list_info_label);
+        emptyTestListInfoLabel = (TextView) findViewById(R.id.empty_test_list_info_label);
         startMultitestButton = (ImageButton) findViewById(R.id.start_multitest_button);
 
-        initUi();
+        initTestGroupList();
+        initTestList();
 
         if (savedInstanceState != null) {
             boolean multitestModeOn = savedInstanceState.getBoolean(MULTITEST_MODE_ON_BUNDLE_KEY, false);
@@ -111,6 +155,20 @@ public class MnemonicActivity extends Activity implements
                 multitestMode = startActionMode(this);
             }
         }
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        drawerToggle.syncState();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        handler.removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -157,6 +215,13 @@ public class MnemonicActivity extends Activity implements
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        drawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_mnemonic, menu);
 
@@ -169,8 +234,7 @@ public class MnemonicActivity extends Activity implements
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        Set<TaskFilter> existingTaskFilters = dbHelper.getExistingTaskFilters();
-
+        Map<TaskFilter, MenuItem> filterMenuItems = new EnumMap<>(TaskFilter.class);
         for (TaskFilter taskFilter : TaskFilter.values()) {
             int menuItemId;
             switch (taskFilter) {
@@ -186,17 +250,37 @@ public class MnemonicActivity extends Activity implements
                     menuItemId = R.id.mnemonic_action_all;
                     break;
             }
-            MenuItem menuItem = menu.findItem(menuItemId);
-            menuItem.setVisible(existingTaskFilters.contains(taskFilter));
+
+            filterMenuItems.put(taskFilter, menu.findItem(menuItemId));
         }
 
         MenuItem searchMenuItem = menu.findItem(R.id.mnemonic_action_search);
-        searchMenuItem.setVisible(existingTaskFilters.contains(TaskFilter.ALL));
-
         MenuItem enableAllTestsMenuItem = menu.findItem(R.id.mnemonic_action_enable_all_tests);
-        enableAllTestsMenuItem.setVisible(dbHelper.hasDisabledTests());
+        MenuItem deleteTestGroupMenuItem = menu.findItem(R.id.mnemonic_action_delete_test_grup);
+
+        if (currentTestGroup != null) {
+            Set<TaskFilter> existingTaskFilters = dbHelper.getExistingTaskFiltersForTestGroup(currentTestGroup);
+            for (Map.Entry<TaskFilter, MenuItem> entry : filterMenuItems.entrySet()) {
+                entry.getValue().setVisible(existingTaskFilters.contains(entry.getKey()));
+            }
+            enableAllTestsMenuItem.setVisible(currentTestGroup.disabledCount() > 0);
+            deleteTestGroupMenuItem.setVisible(true);
+        } else {
+            for (MenuItem menuItem : filterMenuItems.values()) {
+                menuItem.setVisible(false);
+            }
+            enableAllTestsMenuItem.setVisible(false);
+            deleteTestGroupMenuItem.setVisible(false);
+        }
+
+        searchMenuItem.setVisible(filterMenuItems.get(TaskFilter.ALL).isVisible());
 
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return drawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -204,7 +288,7 @@ public class MnemonicActivity extends Activity implements
         if (resultCode == Activity.RESULT_OK && data != null) {
             Uri uri = data.getData();
             if (uri != null) {
-                importTests(uri);
+                importTestGroup(uri);
             }
         }
     }
@@ -244,8 +328,38 @@ public class MnemonicActivity extends Activity implements
         enableAllTests();
     }
 
+    public void deleteTestGroup(MenuItem menuItem) {
+        deleteTestGroup();
+    }
+
     public void browse(MenuItem menuItem) {
         browse();
+    }
+
+    @Override
+    public void onTestGroupClick(int position, TestGroup testGroup) {
+        if (position == testGroupListAdapter.getSelection()) {
+            return;
+        }
+
+        dbHelper.markTestGroupCurrent(testGroup);
+        if (currentTestGroup != null) {
+            // previous current group is not current any longer
+            dbHelper.refreshTestGroup(currentTestGroup);
+        }
+        currentTestGroup = testGroup;
+        testGroupListAdapter.setSelection(position);
+
+        initTestList();
+
+        // close the drawer with a delay
+        handler.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                drawerLayout.closeDrawer(Gravity.START);
+            }
+        }, UI_UPDATE_DELAY);
     }
 
     @Override
@@ -356,48 +470,117 @@ public class MnemonicActivity extends Activity implements
 
         // enable swiping again after dismissal has been processed
         testList.setSwipingEnabled(true);
+
+        dbHelper.refreshTestGroup(currentTestGroup);
+
+        invalidateOptionsMenu();
+
+        // if there are no enabled tests, show the message
+        if (testListAdapter.getItemCount() == 0) {
+            showEmptyTestListMessage(R.string.all_tests_disabled_in_test_group);
+        }
     }
 
     public void startMultitest(View view) {
         startSelected(null);
     }
 
-    private void importTests(Uri uri) {
-        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-             InputStream inputStream = getContentResolver().openInputStream(uri)) {
-            String name = null;
-            if (cursor != null && cursor.moveToFirst()) {
-                name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-            }
-            new Importer(dbHelper).importTests(name, inputStream);
-            initUi();
-        } catch (IOException | ImportException e) {
-            Log.e(TAG, "error importing data", e);
-            Toast.makeText(MnemonicActivity.this, R.string.import_error, Toast.LENGTH_LONG).show();
+    private void initTestGroupList() {
+        List<TestGroup> testGroups = dbHelper.getTestGroups();
+        testGroupListAdapter = new TestGroupListAdapter(this, testGroups);
+        testGroupListAdapter.setOnTestGroupClickListener(this);
+        int currentSelection = testGroupListAdapter.getSelection();
+        currentTestGroup = currentSelection != RecyclerView.NO_POSITION ?
+                testGroupListAdapter.getItem(currentSelection) : null;
+
+        refreshDrawerViews();
+    }
+
+    private void refreshDrawerViews() {
+        if (testGroupListAdapter.getItemCount() > 0) {
+            testGroupList.setVisibility(View.VISIBLE);
+            emptyTestGroupListInfoLabel.setVisibility(View.GONE);
+
+            testGroupList.setAdapter(testGroupListAdapter);
+        } else {
+            testGroupList.setVisibility(View.GONE);
+            emptyTestGroupListInfoLabel.setVisibility(View.VISIBLE);
         }
     }
 
-    private void initUi() {
-        List<Test> tests = dbHelper.getTests();
-
-        if (!tests.isEmpty()) {
-            testList.setVisibility(View.VISIBLE);
-            emptyTestListInfoLabel.setVisibility(View.GONE);
-
-            testListAdapter = new TestListAdapter(tests, getString(R.string.default_test_name));
-            testListAdapter.setOnTestClickListener(this);
-            testListAdapter.setOnTestLongClickListener(this);
-            testList.setAdapter(testListAdapter);
+    private void initTestList() {
+        if (currentTestGroup == null) {
+            showEmptyTestListMessage(R.string.no_test_group_chosen);
         } else {
-            testList.setVisibility(View.GONE);
-            emptyTestListInfoLabel.setVisibility(View.VISIBLE);
+            List<Test> tests = dbHelper.getEnabledTestsForTestGroup(currentTestGroup);
+
+            if (!tests.isEmpty()) {
+                testList.setVisibility(View.VISIBLE);
+                emptyTestListInfoLabel.setVisibility(View.GONE);
+                emptyTestListInfoLabel.setText(null);
+
+                testListAdapter = new TestListAdapter(tests, getString(R.string.default_test_name));
+                testListAdapter.setOnTestClickListener(this);
+                testListAdapter.setOnTestLongClickListener(this);
+                testList.setAdapter(testListAdapter);
+            } else {
+                showEmptyTestListMessage(currentTestGroup.getTestCount() > 0 ?
+                        R.string.all_tests_disabled_in_test_group : R.string.no_tests_in_test_group);
+            }
         }
+
+        updateTitle();
+        invalidateOptionsMenu();
+    }
+
+    private void updateTitle() {
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            if (currentTestGroup == null) {
+                actionBar.setTitle(null);
+            } else {
+                String testGroupName = currentTestGroup.getName();
+                actionBar.setTitle(testGroupName != null ? testGroupName : getString(R.string.default_test_group_name));
+            }
+        }
+    }
+
+    private void showEmptyTestListMessage(@StringRes int id) {
+        testList.setVisibility(View.GONE);
+        emptyTestListInfoLabel.setVisibility(View.VISIBLE);
+        emptyTestListInfoLabel.setText(id);
     }
 
     private void enableAllTests() {
-        dbHelper.enableAllTests();
+        dbHelper.enableAllTestsForTestGroup(currentTestGroup);
 
-        initUi();
+        initTestList();
+    }
+
+    private void deleteTestGroup() {
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.alert_delete_test_group)
+                .setPositiveButton(R.string.alert_yes, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dbHelper.deleteTestGroup(currentTestGroup);
+                        testGroupListAdapter.deleteItem(testGroupListAdapter.getSelection());
+                        currentTestGroup = null;
+                        testListAdapter = null;
+                        testList.setAdapter(null);
+
+                        updateTitle();
+                        invalidateOptionsMenu();
+                        showEmptyTestListMessage(R.string.no_test_group_chosen);
+
+                        if (testGroupListAdapter.getItemCount() == 0) {
+                            refreshDrawerViews();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.alert_no, null)
+                .show();
     }
 
     private void browse() {
@@ -405,6 +588,38 @@ public class MnemonicActivity extends Activity implements
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("text/plain");
         startActivityForResult(intent, 0);
+    }
+
+    private void importTestGroup(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+             InputStream inputStream = getContentResolver().openInputStream(uri)) {
+            String name = null;
+            if (cursor != null && cursor.moveToFirst()) {
+                name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+            }
+
+            final int testGroupCountBefore = testGroupListAdapter.getItemCount();
+            final TestGroup testGroup = new Importer(dbHelper).importTestGroup(name, inputStream);
+
+            // update the UI after a delay for a nicer effect without flicker
+            handler.postDelayed(new Runnable() {
+
+                @Override
+                public void run() {
+                    testGroupListAdapter.addItem(0, testGroup);
+                    if (testGroupCountBefore == 0) {
+                        refreshDrawerViews();
+                    } else {
+                        if (testGroupListLayout.findFirstCompletelyVisibleItemPosition() == 0) {
+                            testGroupListLayout.scrollToPosition(0);
+                        }
+                    }
+                }
+            }, UI_UPDATE_DELAY);
+        } catch (IOException | ImportException e) {
+            Log.e(TAG, "error importing data", e);
+            Toast.makeText(MnemonicActivity.this, R.string.import_error, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void startAll(String testName, TaskFilter taskFilter) {
@@ -430,7 +645,7 @@ public class MnemonicActivity extends Activity implements
             if (testName == null) {
                 testName = test.getName() != null ? test.getName() : getString(R.string.default_test_name);
             }
-            tasks = new ArrayList<>(dbHelper.getTasks(test, taskFilter));
+            tasks = new ArrayList<>(dbHelper.getTasksForTest(test, taskFilter));
             pagesCount = test.getPagesCount();
         } else {
             if (testName == null) {
@@ -446,13 +661,13 @@ public class MnemonicActivity extends Activity implements
             for (int position : selectionPositions) {
                 Test test = testListAdapter.getItem(position);
                 TaskFilter taskFilter = testListAdapter.getSelection(position);
-                tasks.addAll(dbHelper.getTasks(test, taskFilter));
+                tasks.addAll(dbHelper.getTasksForTest(test, taskFilter));
                 pagesCount += test.getPagesCount();
             }
         }
 
         if (tasks.isEmpty()) {
-            Toast.makeText(this, getString(R.string.empty_test_warning), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_tasks), Toast.LENGTH_LONG).show();
             if (multitestMode == null) {
                 // single test was started
                 testListAdapter.clearSelections();

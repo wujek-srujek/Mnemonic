@@ -3,6 +3,7 @@
 
     <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
+        <item name="drawerArrowStyle">@style/MnemonicDrawerArrowToggleStyle</item>
         <item name="android:editTextStyle">@style/MnemonicEditTextStyle</item>
         <item name="floatingActionButtonStyle">@style/MnemonicFabStyle</item>
         <item name="android:windowActionModeOverlay">true</item>
@@ -13,6 +14,11 @@
     <style name="MnemonicToolbarStyle" parent="android:Widget.Toolbar">
         <item name="android:background">?android:attr/colorPrimary</item>
         <item name="android:elevation">2dp</item>
+    </style>
+
+    <style name="MnemonicDrawerArrowToggleStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">?android:attr/textColorPrimary</item>
+        <item name="spinBars">false</item>
     </style>
 
     <style name="MnemonicEditTextStyle" parent="android:Widget.EditText">

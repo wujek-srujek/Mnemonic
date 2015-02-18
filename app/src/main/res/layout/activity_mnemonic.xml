@@ -10,34 +10,71 @@
         android:id="@+id/toolbar"
         layout="@layout/toolbar_snippet"/>
 
-    <com.mnemonic.view.HorizontallySwipeableRecyclerView
-        android:id="@+id/test_list"
+    <android.support.v4.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
-        android:scrollbars="vertical"/>
+        android:layout_below="@id/toolbar">
 
-    <TextView
-        android:id="@+id/empty_test_list_info_label"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
-        android:gravity="center"
-        android:padding="@dimen/spacing_big"
-        android:text="@string/empty_test_list_warning"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:visibility="gone"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <com.mnemonic.view.FloatingActionImageButton
-        android:id="@+id/start_multitest_button"
-        android:layout_width="@dimen/fab_size"
-        android:layout_height="@dimen/fab_size"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="@dimen/spacing_big"
-        android:layout_marginEnd="@dimen/spacing_big"
-        android:onClick="startMultitest"
-        android:src="@drawable/ic_action_multitest"
-        android:visibility="gone"/>
+            <com.mnemonic.view.HorizontallySwipeableRecyclerView
+                android:id="@+id/test_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"/>
+
+            <TextView
+                android:id="@+id/empty_test_list_info_label"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:padding="@dimen/spacing_big"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:visibility="gone"/>
+
+            <com.mnemonic.view.FloatingActionImageButton
+                android:id="@+id/start_multitest_button"
+                android:layout_width="@dimen/fab_size"
+                android:layout_height="@dimen/fab_size"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="@dimen/spacing_big"
+                android:layout_marginEnd="@dimen/spacing_big"
+                android:onClick="startMultitest"
+                android:src="@drawable/ic_action_multitest"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="280dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:background="?android:attr/windowBackground"
+            android:elevation="10dp">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/test_group_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"/>
+
+            <TextView
+                android:id="@+id/empty_test_group_list_info_label"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:padding="@dimen/spacing_big"
+                android:text="@string/no_test_groups"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="?android:attr/textColorPrimary"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
+
+    </android.support.v4.widget.DrawerLayout>
 
 </RelativeLayout>

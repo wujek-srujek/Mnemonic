@@ -28,17 +28,17 @@ public class Importer {
         this.dbHelper = dbHelper;
     }
 
-    public void importTests(final String groupName, final InputStream inputStream) throws ImportException {
+    public TestGroup importTestGroup(final String groupName, final InputStream inputStream) throws ImportException {
         try {
-            dbHelper.runTransactional(new Callable<Void>() {
+            return dbHelper.runTransactional(new Callable<TestGroup>() {
 
                 @Override
-                public Void call() throws IOException {
-                    importTests(
-                            dbHelper.addTestGroup(groupName),
-                            new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
+                public TestGroup call() throws IOException {
+                    TestGroup testGroup = dbHelper.addTestGroup(groupName);
 
-                    return null;
+                    importTests(testGroup, new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
+
+                    return testGroup;
                 }
             });
         } catch (Exception e) {
