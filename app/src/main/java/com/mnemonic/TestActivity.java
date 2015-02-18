@@ -29,17 +29,17 @@ import java.util.Random;
 
 public class TestActivity extends Activity {
 
-    public final static String TEST_NAME_EXTRA = "testName";
+    public static final String TEST_NAME_EXTRA = "testName";
 
-    public final static String TASKS_EXTRA = "tasks";
+    public static final String TASKS_EXTRA = "tasks";
 
-    public final static String PAGES_COUNT_EXTRA = "pagesCount";
+    public static final String PAGES_COUNT_EXTRA = "pagesCount";
 
-    public final static String RANDOMIZE_EXTRA = "randomize";
+    public static final String RANDOMIZE_EXTRA = "randomize";
 
-    public final static String START_TASK_INDEX_EXTRA = "startTaskIndex";
+    public static final String START_TASK_INDEX_EXTRA = "startTaskIndex";
 
-    private final static String RANDOM_SEED_BUNDLE_KEY = "randomSeed";
+    private static final String RANDOM_SEED_BUNDLE_KEY = "randomSeed";
 
     private DbHelper dbHelper;
 

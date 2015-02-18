@@ -32,7 +32,6 @@ import com.mnemonic.db.DbHelper;
 import com.mnemonic.db.Task;
 import com.mnemonic.db.TaskFilter;
 import com.mnemonic.db.Test;
-import com.mnemonic.db.TestGroup;
 import com.mnemonic.importer.ImportException;
 import com.mnemonic.importer.Importer;
 import com.mnemonic.view.HorizontallySwipeableRecyclerView;
@@ -50,11 +49,11 @@ public class MnemonicActivity extends Activity implements
 
     private static final String TAG = MnemonicActivity.class.getSimpleName();
 
-    private final static String MULTITEST_MODE_ON_BUNDLE_KEY = "multitestModeOn";
+    private static final String MULTITEST_MODE_ON_BUNDLE_KEY = "multitestModeOn";
 
-    private final static String SELECTION_POSITIONS_BUNDLE_KEY = "selectedIndices";
+    private static final String SELECTION_POSITIONS_BUNDLE_KEY = "selectedIndices";
 
-    private final static String SELECTIONS_BUNDLE_KEY = "selections";
+    private static final String SELECTIONS_BUNDLE_KEY = "selections";
 
     private long afterSwipeAnimationDuration;
 
@@ -379,11 +378,7 @@ public class MnemonicActivity extends Activity implements
     }
 
     private void initUi() {
-        List<Test> tests = new ArrayList<>(dbHelper.getTestCount());
-        List<TestGroup> testGroups = dbHelper.getTestGroups();
-        for (TestGroup testGroup : testGroups) {
-            tests.addAll(dbHelper.getTests(testGroup));
-        }
+        List<Test> tests = dbHelper.getTests();
 
         if (!tests.isEmpty()) {
             testList.setVisibility(View.VISIBLE);

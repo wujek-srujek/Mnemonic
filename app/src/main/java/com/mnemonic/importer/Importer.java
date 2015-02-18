@@ -16,11 +16,11 @@ import java.util.regex.Pattern;
 
 public class Importer {
 
-    private final static String TEST_MARKER = "!";
+    private static final String TEST_MARKER = "!";
 
-    private final static String COMMENT_MARKER = "#";
+    private static final String COMMENT_MARKER = "#";
 
-    private final static Pattern SPLITTER_PATTERN = Pattern.compile("\\s*=\\s*");
+    private static final Pattern SPLITTER_PATTERN = Pattern.compile("\\s*=\\s*");
 
     private final DbHelper dbHelper;
 

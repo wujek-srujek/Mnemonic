@@ -13,7 +13,7 @@ import android.widget.Toolbar;
 
 public class CommentActivity extends Activity {
 
-    public final static String COMMENT_EXTRA = "comment";
+    public static final String COMMENT_EXTRA = "comment";
 
     private EditText commentText;
 

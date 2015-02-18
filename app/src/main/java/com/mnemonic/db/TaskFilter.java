@@ -5,49 +5,93 @@ public enum TaskFilter {
 
     ALL {
         @Override
-        public String getColumn() {
-            return Db.Task._COUNT;
+        String getRawTaskColumn() {
+            return null;
         }
 
         @Override
-        public String getFilterCondition(String tableAlias) {
+        String getSelectExpression(String tablePrefix) {
+            return "count(*)";
+        }
+
+        @Override
+        String getCondition(String tablePrefix) {
             return "1=1";
+        }
+
+        @Override
+        String getAlias() {
+            return "_all_filter";
         }
     },
 
     FAVORITE {
         @Override
-        public String getColumn() {
+        String getRawTaskColumn() {
             return Db.Task.FAVORITE;
         }
 
         @Override
-        public String getFilterCondition(String tableAlias) {
-            return column(tableAlias) + "=1";
+        String getSelectExpression(String tablePrefix) {
+            return "total(" + getTaskColumn(tablePrefix) + ")";
+        }
+
+        @Override
+        String getCondition(String tablePrefix) {
+            return getTaskColumn(tablePrefix) + "=1";
+        }
+
+        @Override
+        String getAlias() {
+            return "_favorite_filter";
         }
     },
 
     COMMENTED {
         @Override
-        public String getColumn() {
+        String getRawTaskColumn() {
             return Db.Task.COMMENT;
         }
 
         @Override
-        public String getFilterCondition(String tableAlias) {
-            return column(tableAlias) + " is not null";
+        String getSelectExpression(String tablePrefix) {
+            return "count(" + getTaskColumn(tablePrefix) + ")";
+        }
+
+        @Override
+        String getCondition(String tablePrefix) {
+            return getTaskColumn(tablePrefix) + " is not null";
+        }
+
+        @Override
+        String getAlias() {
+            return "_commented_filter";
         }
     };
 
-    public abstract String getColumn();
+    String getTaskColumn(String tablePrefix) {
+        String rawColumn = getRawTaskColumn();
 
-    public abstract String getFilterCondition(String tableAlias);
-
-    String column(String tableAlias) {
-        if (tableAlias == null || tableAlias.isEmpty()) {
-            return getColumn();
+        if (rawColumn == null) {
+            return null;
         }
 
-        return tableAlias + "." + getColumn();
+        if (tablePrefix != null) {
+            return tablePrefix + "." + rawColumn;
+        }
+
+        return rawColumn;
     }
+
+    String getSelect(String tablePrefix) {
+        return getSelectExpression(tablePrefix) + " as " + getAlias();
+    }
+
+    abstract String getRawTaskColumn();
+
+    abstract String getSelectExpression(String tablePrefix);
+
+    abstract String getCondition(String tablePrefix);
+
+    abstract String getAlias();
 }

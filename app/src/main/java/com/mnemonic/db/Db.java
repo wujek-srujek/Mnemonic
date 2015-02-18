@@ -8,30 +8,33 @@ public final class Db {
 
     public static final String NAME = "mnemonic";
 
-    public final static class TestGroup implements BaseColumns {
+    public static final class TestGroup implements BaseColumns {
 
         private TestGroup() {
             // nope
         }
 
-        static final String _TABLE_NAME = "test_group";
+        public static final String _TABLE_NAME = "test_group";
 
         public static final String NAME = "name";
 
+        public static final String CREATION_TIMESTAMP = "creation_timestamp";
+
         static final String _CREATE_TABLE = "create table " + _TABLE_NAME + " (" +
                 _ID + " integer primary key, " +
-                NAME + " text)";
+                NAME + " text, " +
+                CREATION_TIMESTAMP + " integer not null)";
     }
 
-    public final static class Test implements BaseColumns {
+    public static final class Test implements BaseColumns {
 
         private Test() {
             // nope
         }
 
-        static final String _TABLE_NAME = "test";
+        public static final String _TABLE_NAME = "test";
 
-        static final String _TEST_GROUP_ID = "_test_group_id";
+        public static final String _TEST_GROUP_ID = "_test_group_id";
 
         public static final String NAME = "name";
 
@@ -39,27 +42,33 @@ public final class Db {
 
         public static final String ENABLED = "enabled";
 
-        public static final String _TASK_COUNT = "_task_count";
-
-        public static final String _ANSWER_COUNT = "_answer_count";
-
         static final String _CREATE_TABLE = "create table " + _TABLE_NAME + " (" +
                 _ID + " integer primary key, " +
                 _TEST_GROUP_ID + " integer not null references " + TestGroup._TABLE_NAME + " on delete cascade, " +
                 NAME + " text, " +
                 DESCRIPTION + " text, " +
                 ENABLED + " integer not null default 1)";
+
+        static final class Indexes {
+
+            private Indexes() {
+                // nope
+            }
+
+            static final String TEST_GROUP_ID_INDEX = "create index " + Test._TEST_GROUP_ID + "_index on " + Test._TABLE_NAME +
+                    "(" + Test._TEST_GROUP_ID + ")";
+        }
     }
 
-    public final static class Task implements BaseColumns {
+    public static final class Task implements BaseColumns {
 
         private Task() {
             // nope
         }
 
-        static final String _TABLE_NAME = "task";
+        public static final String _TABLE_NAME = "task";
 
-        static final String _TEST_ID = "_test_id";
+        public static final String _TEST_ID = "_test_id";
 
         public static final String QUESTION = "question";
 
@@ -76,22 +85,32 @@ public final class Db {
                 ANSWER + " text, " +
                 FAVORITE + " integer not null default 0, " +
                 COMMENT + " text)";
+
+        static final class Indexes {
+
+            private Indexes() {
+                // nope
+            }
+
+            static final String TEST_ID_INDEX = "create index " + Task._TEST_ID + "_index on " + Task._TABLE_NAME +
+                    "(" + Task._TEST_ID + ")";
+        }
     }
 
-    public final static class TaskFullTextSearch {
+    public static final class TaskFullTextSearch {
 
         private TaskFullTextSearch() {
             // nope
         }
 
-        static final String _TABLE_NAME = "task_full_text_search";
+        public static final String _TABLE_NAME = "task_full_text_search";
 
-        static final String _DOC_ID = "docid";
+        public static final String _DOC_ID = "docid";
 
         static final String _CREATE_TABLE = "create virtual table " + _TABLE_NAME + " using fts4(content=" + Task._TABLE_NAME +
                 ", " + Task.QUESTION + ", " + Task.ANSWER + ", tokenize=porter)";
 
-        static class Triggers {
+        static final class Triggers {
 
             private Triggers() {
                 // nope
