@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -91,6 +92,39 @@ public class TestActivity extends Activity {
 
             return;
         }
+
+        favoriteButton.setOnLongClickListener(new View.OnLongClickListener() {
+
+            @Override
+            public boolean onLongClick(View v) {
+                v.startDrag(null, new View.DragShadowBuilder(v), null, 0);
+
+                return true;
+            }
+        });
+
+        findViewById(R.id.test_main_layout).setOnDragListener(new View.OnDragListener() {
+
+            @Override
+            public boolean onDrag(View v, DragEvent event) {
+                switch (event.getAction()) {
+                    case DragEvent.ACTION_DRAG_STARTED:
+                        favoriteButton.setVisibility(View.INVISIBLE);
+                        break;
+
+                    case DragEvent.ACTION_DROP:
+                        favoriteButton.setY(event.getY() - favoriteButton.getHeight() / 2.F);
+                        favoriteButton.setX(event.getX() - favoriteButton.getWidth() / 2.F);
+                        break;
+
+                    case DragEvent.ACTION_DRAG_ENDED:
+                        favoriteButton.setVisibility(View.VISIBLE);
+                        break;
+                }
+
+                return true;
+            }
+        });
 
         taskPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 

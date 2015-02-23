@@ -27,7 +27,7 @@
     </style>
 
     <style name="MnemonicFabStyle" parent="android:Widget.ImageButton">
-        <item name="android:background">@drawable/ripple</item>
+        <item name="android:background">@drawable/fab_background_ripple_accent</item>
         <item name="android:elevation">4dp</item>
     </style>
 
