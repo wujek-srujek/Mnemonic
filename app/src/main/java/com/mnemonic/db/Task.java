@@ -19,8 +19,9 @@ public class Task implements Parcelable {
             String answer = in.readString();
             boolean favorite = in.readInt() != 0;
             String comment = in.readString();
+            Test test = in.readParcelable(getClass().getClassLoader());
 
-            return new Task(_id, question, answer, favorite, comment);
+            return new Task(_id, question, answer, favorite, comment, test);
         }
 
         @Override
@@ -39,12 +40,15 @@ public class Task implements Parcelable {
 
     String comment;
 
-    Task(long _id, String question, String answer, boolean favorite, String comment) {
+    private final Test test;
+
+    Task(long _id, String question, String answer, boolean favorite, String comment, Test test) {
         this._id = _id;
         this.question = question;
         this.answer = answer;
         this.favorite = favorite;
         this.comment = comment;
+        this.test = test;
     }
 
     public String getQuestion() {
@@ -61,6 +65,10 @@ public class Task implements Parcelable {
 
     public String getComment() {
         return comment;
+    }
+
+    public Test getTest() {
+        return test;
     }
 
     public int getPagesCount() {
@@ -90,13 +98,15 @@ public class Task implements Parcelable {
         dest.writeString(answer);
         dest.writeInt(favorite ? 1 : 0);
         dest.writeString(comment);
+        dest.writeParcelable(test, 0);
     }
 
     @Override
     public String toString() {
-        return String.format("%s[question=%s, answer=%s, favorite=%b, comment=%s]",
+        return String.format("%s[question=%s, answer=%s, favorite=%b, comment=%s, test=%s]",
                 getClass().getSimpleName(), question.replaceAll("\n", "|"),
                 answer != null ? answer.replaceAll("\n", "|") : null,
-                favorite, comment != null ? comment.replaceAll("\n", "|") : null);
+                favorite, comment != null ? comment.replaceAll("\n", "|") : null,
+                test);
     }
 }

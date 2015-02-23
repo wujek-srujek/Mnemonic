@@ -310,18 +310,15 @@ public class MnemonicActivity extends Activity implements
     }
 
     public void startAll(MenuItem menuItem) {
-        startAll(String.format(getString(R.string.meta_name_braces), getString(R.string.action_all_tasks)),
-                TaskFilter.ALL);
+        startAll(TaskFilter.ALL);
     }
 
     public void startAllFavorite(MenuItem menuItem) {
-        startAll(String.format(getString(R.string.meta_name_braces), getString(R.string.action_all_favorite)),
-                TaskFilter.FAVORITE);
+        startAll(TaskFilter.FAVORITE);
     }
 
     public void startAllCommented(MenuItem menuItem) {
-        startAll(String.format(getString(R.string.meta_name_braces), getString(R.string.action_all_commented)),
-                TaskFilter.COMMENTED);
+        startAll(TaskFilter.COMMENTED);
     }
 
     public void enableAllTests(MenuItem menuItem) {
@@ -367,7 +364,7 @@ public class MnemonicActivity extends Activity implements
         if (multitestMode == null) {
             // if not in multitest mode, start the test immediately
             testListAdapter.setSelection(position, taskFilter);
-            startSelected(null);
+            startSelected();
         } else {
             applyMultitestEvent(position, taskFilter);
         }
@@ -482,7 +479,7 @@ public class MnemonicActivity extends Activity implements
     }
 
     public void startMultitest(View view) {
-        startSelected(null);
+        startSelected();
     }
 
     private void initTestGroupList() {
@@ -622,7 +619,7 @@ public class MnemonicActivity extends Activity implements
         }
     }
 
-    private void startAll(String testName, TaskFilter taskFilter) {
+    private void startAll(TaskFilter taskFilter) {
         for (int i = 0; i < testListAdapter.getItemCount(); ++i) {
             Test test = testListAdapter.getItem(i);
             if (test.getAvailableTaskFilters().contains(taskFilter)) {
@@ -630,40 +627,25 @@ public class MnemonicActivity extends Activity implements
             }
         }
 
-        startSelected(testName);
+        startSelected();
     }
 
-    private void startSelected(String testName) {
+    private void startSelected() {
         ArrayList<Task> tasks;
         int pagesCount;
 
-        int[] selectionPositions = testListAdapter.getSelectionPositions();
-        if (testListAdapter.getSelectionCount() == 1) {
-            Test test = testListAdapter.getItem(selectionPositions[0]);
-            TaskFilter taskFilter = testListAdapter.getSelection(selectionPositions[0]);
+        int taskCount = 0;
+        for (int position : testListAdapter.getSelectionPositions()) {
+            taskCount += testListAdapter.getItem(position).getTaskCount();
+        }
 
-            if (testName == null) {
-                testName = test.getName() != null ? test.getName() : getString(R.string.default_test_name);
-            }
-            tasks = new ArrayList<>(dbHelper.getTasksForTest(test, taskFilter));
-            pagesCount = test.getPagesCount();
-        } else {
-            if (testName == null) {
-                testName = getString(R.string.multitest_title);
-            }
-
-            int taskCount = 0;
-            for (int position : selectionPositions) {
-                taskCount += testListAdapter.getItem(position).getTaskCount();
-            }
-            pagesCount = 0;
-            tasks = new ArrayList<>(taskCount);
-            for (int position : selectionPositions) {
-                Test test = testListAdapter.getItem(position);
-                TaskFilter taskFilter = testListAdapter.getSelection(position);
-                tasks.addAll(dbHelper.getTasksForTest(test, taskFilter));
-                pagesCount += test.getPagesCount();
-            }
+        pagesCount = 0;
+        tasks = new ArrayList<>(taskCount);
+        for (int position : testListAdapter.getSelectionPositions()) {
+            Test test = testListAdapter.getItem(position);
+            TaskFilter taskFilter = testListAdapter.getSelection(position);
+            tasks.addAll(dbHelper.getTasksForTest(test, taskFilter));
+            pagesCount += test.getPagesCount();
         }
 
         if (tasks.isEmpty()) {
@@ -674,7 +656,6 @@ public class MnemonicActivity extends Activity implements
             }
         } else {
             Intent intent = new Intent(this, TestActivity.class);
-            intent.putExtra(TestActivity.TEST_NAME_EXTRA, testName);
             intent.putExtra(TestActivity.TASKS_EXTRA, tasks);
             intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);
             intent.putExtra(TestActivity.RANDOMIZE_EXTRA, true);

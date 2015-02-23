@@ -14,13 +14,10 @@
     <string name="alert_delete_test_group">Do you really want to delete the test group?</string>
     <string name="alert_yes">Yes</string>
     <string name="alert_no">No</string>
-    <string name="meta_name_braces">&lt;%s&gt;</string>
     <string name="default_test_group_name">&lt;Unnamed test group&gt;</string>
     <string name="default_test_name">&lt;Unnamed test&gt;</string>
     <string name="import_error">Problems occurred, data not imported</string>
-    <string name="empty_test_format">Test \'%s\' is empty</string>
     <string name="multitest_mode_title">%d selected</string>
-    <string name="multitest_title">&lt;Multiple tests&gt;</string>
     <string name="question">Question</string>
     <string name="answer">Answer</string>
     <string name="info">Info</string>
@@ -37,6 +34,5 @@
     <string name="action_cancel_delete">Cancel/delete</string>
     <string name="invalid_query">Invalid search query</string>
     <string name="no_results">No results found for the specified search criteria</string>
-    <string name="search_results_test_name">&lt;Search results&gt;</string>
 
 </resources>

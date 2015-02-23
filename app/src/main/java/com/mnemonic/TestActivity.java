@@ -29,8 +29,6 @@ import java.util.Random;
 
 public class TestActivity extends Activity {
 
-    public static final String TEST_NAME_EXTRA = "testName";
-
     public static final String TASKS_EXTRA = "tasks";
 
     public static final String PAGES_COUNT_EXTRA = "pagesCount";
@@ -67,11 +65,6 @@ public class TestActivity extends Activity {
         dbHelper = MnemonicApplication.getDbHelper();
 
         Intent intent = getIntent();
-
-        ActionBar actionBar = getActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(intent.getStringExtra(TEST_NAME_EXTRA));
-        }
 
         orderedTasks = intent.getParcelableArrayListExtra(TASKS_EXTRA);
         pagesCount = intent.getIntExtra(PAGES_COUNT_EXTRA, 0);
@@ -245,12 +238,15 @@ public class TestActivity extends Activity {
         String taskInfo = String.format(getString(R.string.task_info_format),
                 currentPage.getTaskNumber(), orderedTasks.size(), getString(stringId));
 
+        Task currentTask = currentPage.getTask();
+
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
+            String testName = currentTask.getTest().getName();
+            actionBar.setTitle(testName != null ? testName : getString(R.string.default_test_name));
             actionBar.setSubtitle(taskInfo);
         }
 
-        Task currentTask = currentPage.getTask();
         updateFavoriteState(currentTask);
         invalidateOptionsMenu();
     }

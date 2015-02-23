@@ -113,7 +113,6 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
         }
 
         Intent intent = new Intent(this, TestActivity.class);
-        intent.putExtra(TestActivity.TEST_NAME_EXTRA, getString(R.string.search_results_test_name));
         intent.putExtra(TestActivity.TASKS_EXTRA, tasks);
         intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);
         intent.putExtra(TestActivity.START_TASK_INDEX_EXTRA, position);

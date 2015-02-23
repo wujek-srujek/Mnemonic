@@ -34,7 +34,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String SELECT_TEST_GROUPS;
 
-    private static final String TEST_GROUP_REFRESH;
+    private static final String SELECT_TEST_GROUP;
 
     private static final String SELECT_CURRENT_TEST_GROUP;
 
@@ -44,7 +44,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 Db.Test._TABLE_NAME + " as te on tg." + Db.TestGroup._ID + "=te." + Db.Test._TEST_GROUP_ID;
 
         SELECT_TEST_GROUPS = select + " group by tg." + Db.TestGroup._ID + " order by tg." + Db.TestGroup.CREATION_TIMESTAMP + " desc";
-        TEST_GROUP_REFRESH = select + " where tg." + Db.TestGroup._ID + "=?";
+        SELECT_TEST_GROUP = select + " where tg." + Db.TestGroup._ID + "=?";
         SELECT_CURRENT_TEST_GROUP = select + " where tg." + Db.TestGroup.CURRENT + "=1";
     }
 
@@ -53,9 +53,9 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String SELECT_ENABLED_TESTS_FOR_TEST_GROUP;
 
-    private static final String TASK_EXISTENCE_CHECK_FOR_TEST_GROUP;
+    private static final String SELECT_TEST;
 
-    private static final String TASK_EXISTENCE_CHECK_FOR_TEST;
+    private static final String TASK_EXISTENCE_CHECK_FOR_TEST_GROUP;
 
     static {
         String selectFilters = "select ";
@@ -68,14 +68,15 @@ public class DbHelper extends SQLiteOpenHelper {
             selectFilters += taskFilter.getSelect("ta");
         }
 
+        String testData = "count(ta." + Db.Task.ANSWER + ") as " + TEST_ANSWER_COUNT + ", te.*";
         String fromTestLeftJoinTask = "from " + Db.Test._TABLE_NAME + " as te left join " + Db.Task._TABLE_NAME + " as ta on te." +
                 Db.Test._ID + "=ta." + Db.Task._TEST_ID;
         String whereInGroupAndEnabled = "where te." + Db.Test._TEST_GROUP_ID + "=? and te." + Db.Test.ENABLED + "=1";
 
-        SELECT_ENABLED_TESTS_FOR_TEST_GROUP = selectFilters + ", count(ta." + Db.Task.ANSWER + ") as " + TEST_ANSWER_COUNT + ", te.* " +
-                fromTestLeftJoinTask + " " + whereInGroupAndEnabled + " group by te." + Db.Test._ID + " order by te." + Db.Test._ID;
+        SELECT_ENABLED_TESTS_FOR_TEST_GROUP = selectFilters + ", " + testData + " " + fromTestLeftJoinTask + " " +
+                whereInGroupAndEnabled + " group by te." + Db.Test._ID + " order by te." + Db.Test._ID;
+        SELECT_TEST = selectFilters + ", " + testData + " " + fromTestLeftJoinTask + " where te." + Db.Test._ID + "=?";
         TASK_EXISTENCE_CHECK_FOR_TEST_GROUP = selectFilters + " " + fromTestLeftJoinTask + " " + whereInGroupAndEnabled;
-        TASK_EXISTENCE_CHECK_FOR_TEST = selectFilters + " from " + Db.Task._TABLE_NAME + " as ta where ta." + Db.Task._TEST_ID + "=?";
     }
 
     private static final String TEST_ENABLED_STATE_UPDATE = "update " + Db.Test._TABLE_NAME + " set " + Db.Test.ENABLED +
@@ -214,7 +215,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         long _id = getWritableDatabase().insertOrThrow(Db.Task._TABLE_NAME, null, values);
 
-        Task task = new Task(_id, question, answer, false, null);
+        Task task = new Task(_id, question, answer, false, null, test);
 
         ++test.taskCount;
         test.pagesCount += task.getPagesCount();
@@ -235,7 +236,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void refreshTestGroup(TestGroup testGroup) {
-        Cursor cursor = getReadableDatabase().rawQuery(TEST_GROUP_REFRESH, new String[]{"" + testGroup._id});
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_GROUP, new String[]{"" + testGroup._id});
         cursor.moveToNext();
         testGroup.current = cursor.getInt(cursor.getColumnIndex(Db.TestGroup.CURRENT)) != 0;
         testGroup.testCount = cursor.getInt(cursor.getColumnIndex(TEST_GROUP_TEST_COUNT));
@@ -282,7 +283,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void refreshTest(Test test) {
-        Cursor cursor = getReadableDatabase().rawQuery(TASK_EXISTENCE_CHECK_FOR_TEST, new String[]{"" + test._id});
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST, new String[]{"" + test._id});
         cursor.moveToNext();
         test.availableTaskFilters = filtersFromCursor(cursor);
         cursor.close();
@@ -293,7 +294,7 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test._id});
         List<Task> tasks = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
-            tasks.add(taskFromCursor(cursor));
+            tasks.add(taskFromCursor(cursor, test));
         }
         cursor.close();
 
@@ -309,8 +310,19 @@ public class DbHelper extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             throw new SearchException(e);
         }
+
+        // this map will be filled with tests to minimize number of queries
+        Map<Long, Test> tests = new HashMap<>(tasks.size());
         while (cursor.moveToNext()) {
-            tasks.add(taskFromCursor(cursor));
+            Long testId = cursor.getLong(cursor.getColumnIndex(Db.Task._TEST_ID));
+            Test test = tests.get(testId);
+            Task task = taskFromCursor(cursor, test);
+            tasks.add(task);
+
+            if (test == null) {
+                // test was null and must have been fetched, cache it
+                tests.put(testId, task.getTest());
+            }
         }
         cursor.close();
 
@@ -376,14 +388,26 @@ public class DbHelper extends SQLiteOpenHelper {
         return new Test(_id, name, description, enabled, taskCount, taskCount + answerCount, availableTaskFilters);
     }
 
-    private Task taskFromCursor(Cursor cursor) {
+    private Task taskFromCursor(Cursor cursor, Test test) {
         long _id = cursor.getLong(cursor.getColumnIndex(Db.Task._ID));
         String question = cursor.getString(cursor.getColumnIndex(Db.Task.QUESTION));
         String answer = cursor.getString(cursor.getColumnIndex(Db.Task.ANSWER));
         boolean favorite = cursor.getInt(cursor.getColumnIndex(Db.Task.FAVORITE)) != 0;
         String comment = cursor.getString(cursor.getColumnIndex(Db.Task.COMMENT));
 
-        return new Task(_id, question, answer, favorite, comment);
+        if (test == null) {
+            // test not given, need to fetch it
+            // normally, such implementation is naive as it causes the infamous N+1 selects problem
+            // but data volume is small, the search filters it further, and the tests are cached
+            // i.e. I don't care here
+            long _testId = cursor.getLong(cursor.getColumnIndex(Db.Task._TEST_ID));
+            Cursor testCursor = getReadableDatabase().rawQuery(SELECT_TEST, new String[]{"" + _testId});
+            testCursor.moveToNext();
+            test = testFromCursor(testCursor);
+            testCursor.close();
+        }
+
+        return new Task(_id, question, answer, favorite, comment, test);
     }
 
     private Set<TaskFilter> filtersFromCursor(Cursor cursor) {
