@@ -14,14 +14,7 @@ public class Task implements Parcelable {
 
         @Override
         public Task createFromParcel(Parcel in) {
-            long _id = in.readLong();
-            String question = in.readString();
-            String answer = in.readString();
-            boolean favorite = in.readInt() != 0;
-            String comment = in.readString();
-            Test test = in.readParcelable(getClass().getClassLoader());
-
-            return new Task(_id, question, answer, favorite, comment, test);
+            return Task.readFromParcel(in);
         }
 
         @Override
@@ -99,6 +92,17 @@ public class Task implements Parcelable {
         dest.writeInt(favorite ? 1 : 0);
         dest.writeString(comment);
         dest.writeParcelable(test, 0);
+    }
+
+    static Task readFromParcel(Parcel in) {
+        long _id = in.readLong();
+        String question = in.readString();
+        String answer = in.readString();
+        boolean favorite = in.readInt() != 0;
+        String comment = in.readString();
+        Test test = in.readParcelable(Task.class.getClassLoader());
+
+        return new Task(_id, question, answer, favorite, comment, test);
     }
 
     @Override

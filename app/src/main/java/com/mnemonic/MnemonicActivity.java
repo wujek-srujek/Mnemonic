@@ -101,6 +101,8 @@ public class MnemonicActivity extends Activity implements
 
     private TestGroup currentTestGroup;
 
+    private TestGroup newlyAddedTestGroup;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -175,43 +177,63 @@ public class MnemonicActivity extends Activity implements
     protected void onResume() {
         super.onResume();
 
-        if (testListAdapter == null) {
-            return;
-        }
+        if (testListAdapter != null) {
+            // the tests might have changed, e.g. all favorites may have been deselected etc.
+            // refresh the test group, the tests and their visible views
+            // consider all tests as we might be coming back from search
+            dbHelper.refreshTestGroup(currentTestGroup);
+            for (int i = 0; i < testListAdapter.getItemCount(); ++i) {
+                Test test = testListAdapter.getItem(i);
+                TaskFilter taskFilter = testListAdapter.getSelection(i);
+                Set<TaskFilter> previouslyAvailableTaskFilters = test.getAvailableTaskFilters();
 
-        // the tests might have changed, e.g. all favorites may have been deselected etc.
-        // refresh the tests and their visible views
-        // consider all tests as we might be coming back from search
-        for (int i = 0; i < testListAdapter.getItemCount(); ++i) {
-            Test test = testListAdapter.getItem(i);
-            TaskFilter taskFilter = testListAdapter.getSelection(i);
-            Set<TaskFilter> previouslyAvailableTaskFilters = test.getAvailableTaskFilters();
+                // refresh test information
+                dbHelper.refreshTest(test);
 
-            // refresh test information
-            dbHelper.refreshTest(test);
-
-            Set<TaskFilter> availableTaskFilters = test.getAvailableTaskFilters();
-            // check if the test view is still valid, i.e. if all previous filters are still available
-            if (!availableTaskFilters.equals(previouslyAvailableTaskFilters)) {
-                if (!availableTaskFilters.contains(taskFilter)) {
-                    // the previously chosen filter is not available any longer
-                    // so clear it; the view is refreshed as side effect
-                    testListAdapter.clearSelection(i);
-                } else {
-                    // some other filter is not available, just refresh
-                    testList.getAdapter().notifyItemChanged(i);
+                Set<TaskFilter> availableTaskFilters = test.getAvailableTaskFilters();
+                // check if the test view is still valid, i.e. if all previous filters are still available
+                if (!availableTaskFilters.equals(previouslyAvailableTaskFilters)) {
+                    if (!availableTaskFilters.contains(taskFilter)) {
+                        // the previously chosen filter is not available any longer
+                        // so clear it; the view is refreshed as side effect
+                        testListAdapter.clearSelection(i);
+                    } else {
+                        // some other filter is not available, just refresh
+                        testList.getAdapter().notifyItemChanged(i);
+                    }
                 }
             }
+
+            if (multitestMode != null) {
+                updateMultitestMode();
+            } else {
+                // single test was started or activity initially shown
+                testListAdapter.clearSelections();
+            }
+
+            invalidateOptionsMenu();
         }
 
-        if (multitestMode != null) {
-            updateMultitestMode();
-        } else {
-            // single test was started or activity initially shown
-            testListAdapter.clearSelections();
-        }
+        if (newlyAddedTestGroup != null) {
+            final int testGroupCountBefore = testGroupListAdapter.getItemCount();
+            final TestGroup testGroup = newlyAddedTestGroup;
+            newlyAddedTestGroup = null;
 
-        invalidateOptionsMenu();
+            // update the UI after a delay for a nicer effect without flicker
+            handler.postDelayed(new Runnable() {
+
+                @Override
+                public void run() {
+                    testGroupListAdapter.addItem(0, testGroup);
+
+                    if (testGroupCountBefore == 0) {
+                        refreshDrawerViews();
+                    } else if (testGroupListLayout.findFirstCompletelyVisibleItemPosition() == 0) {
+                        testGroupListLayout.scrollToPosition(0);
+                    }
+                }
+            }, UI_UPDATE_DELAY);
+        }
     }
 
     @Override
@@ -259,9 +281,8 @@ public class MnemonicActivity extends Activity implements
         MenuItem deleteTestGroupMenuItem = menu.findItem(R.id.mnemonic_action_delete_test_grup);
 
         if (currentTestGroup != null) {
-            Set<TaskFilter> existingTaskFilters = dbHelper.getExistingTaskFiltersForTestGroup(currentTestGroup);
             for (Map.Entry<TaskFilter, MenuItem> entry : filterMenuItems.entrySet()) {
-                entry.getValue().setVisible(existingTaskFilters.contains(entry.getKey()));
+                entry.getValue().setVisible(currentTestGroup.hasTaskFilter(entry.getKey()));
             }
             enableAllTestsMenuItem.setVisible(currentTestGroup.disabledCount() > 0);
             deleteTestGroupMenuItem.setVisible(true);
@@ -549,7 +570,9 @@ public class MnemonicActivity extends Activity implements
     }
 
     private void enableAllTests() {
+        // TODO consider all cases when the database doesn't need to be contacted
         dbHelper.enableAllTestsForTestGroup(currentTestGroup);
+        dbHelper.refreshTestGroup(currentTestGroup);
 
         initTestList();
     }
@@ -595,24 +618,7 @@ public class MnemonicActivity extends Activity implements
                 name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
             }
 
-            final int testGroupCountBefore = testGroupListAdapter.getItemCount();
-            final TestGroup testGroup = new Importer(dbHelper).importTestGroup(name, inputStream);
-
-            // update the UI after a delay for a nicer effect without flicker
-            handler.postDelayed(new Runnable() {
-
-                @Override
-                public void run() {
-                    testGroupListAdapter.addItem(0, testGroup);
-                    if (testGroupCountBefore == 0) {
-                        refreshDrawerViews();
-                    } else {
-                        if (testGroupListLayout.findFirstCompletelyVisibleItemPosition() == 0) {
-                            testGroupListLayout.scrollToPosition(0);
-                        }
-                    }
-                }
-            }, UI_UPDATE_DELAY);
+            newlyAddedTestGroup = new Importer(dbHelper).importTestGroup(name, inputStream);
         } catch (IOException | ImportException e) {
             Log.e(TAG, "error importing data", e);
             Toast.makeText(MnemonicActivity.this, R.string.import_error, Toast.LENGTH_LONG).show();
