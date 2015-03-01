@@ -139,10 +139,11 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(Db.Task.Indexes.TEST_ID_INDEX);
 
         db.execSQL(Db.TaskFullTextIndex._CREATE_TABLE);
-        db.execSQL(Db.TaskFullTextIndex.Triggers.AFTER_INSERT);
-        db.execSQL(Db.TaskFullTextIndex.Triggers.BEFORE_UPDATE);
-        db.execSQL(Db.TaskFullTextIndex.Triggers.AFTER_UPDATE);
-        db.execSQL(Db.TaskFullTextIndex.Triggers.BEFORE_DELETE);
+
+        db.execSQL(Db.Task.Triggers.AFTER_INSERT);
+        db.execSQL(Db.Task.Triggers.BEFORE_UPDATE);
+        db.execSQL(Db.Task.Triggers.AFTER_UPDATE);
+        db.execSQL(Db.Task.Triggers.BEFORE_DELETE);
     }
 
     @Override

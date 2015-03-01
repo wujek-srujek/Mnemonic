@@ -14,19 +14,7 @@ public class Test implements Parcelable {
 
         @Override
         public Test createFromParcel(Parcel in) {
-            long _id = in.readLong();
-            String name = in.readString();
-            String description = in.readString();
-            boolean enabled = in.readInt() != 0;
-            int taskCount = in.readInt();
-            int pagesCount = in.readInt();
-            Set<TaskFilter> availableTaskFilters = EnumSet.noneOf(TaskFilter.class);
-            int filterCount = in.readInt();
-            for (int i = 0; i < filterCount; ++i) {
-                availableTaskFilters.add(TaskFilter.valueOf(in.readString()));
-            }
-
-            return new Test(_id, name, description, enabled, taskCount, pagesCount, availableTaskFilters);
+            return Test.readFromParcel(in);
         }
 
         @Override
@@ -49,7 +37,8 @@ public class Test implements Parcelable {
 
     Set<TaskFilter> availableTaskFilters;
 
-    Test(long _id, String name, String description, boolean enabled, int taskCount, int pagesCount, Set<TaskFilter> availableTaskFilters) {
+    Test(long _id, String name, String description, boolean enabled, int taskCount,
+         int pagesCount, Set<TaskFilter> availableTaskFilters) {
         this._id = _id;
         this.name = name;
         this.description = description;
@@ -100,6 +89,22 @@ public class Test implements Parcelable {
         for (TaskFilter taskFilter : availableTaskFilters) {
             dest.writeString(taskFilter.name());
         }
+    }
+
+    static Test readFromParcel(Parcel in) {
+        long _id = in.readLong();
+        String name = in.readString();
+        String description = in.readString();
+        boolean enabled = in.readInt() != 0;
+        int taskCount = in.readInt();
+        int pagesCount = in.readInt();
+        Set<TaskFilter> availableTaskFilters = EnumSet.noneOf(TaskFilter.class);
+        int filterCount = in.readInt();
+        for (int i = 0; i < filterCount; ++i) {
+            availableTaskFilters.add(TaskFilter.valueOf(in.readString()));
+        }
+
+        return new Test(_id, name, description, enabled, taskCount, pagesCount, availableTaskFilters);
     }
 
     @Override

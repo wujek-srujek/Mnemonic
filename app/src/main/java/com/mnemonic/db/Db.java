@@ -109,6 +109,31 @@ public final class Db {
             static final String TEST_ID_INDEX = "create index " + Task._TEST_ID + "_index on " + Task._TABLE_NAME +
                     "(" + Task._TEST_ID + ")";
         }
+
+        static final class Triggers {
+
+            private Triggers() {
+                // nope
+            }
+
+            private static final String AFTER_FMT = "create trigger " + _TABLE_NAME + "_after_%1$s after %1$s %2$s on "
+                    + _TABLE_NAME + " begin insert into " + TaskFullTextIndex._TABLE_NAME + "(" + TaskFullTextIndex._DOC_ID +
+                    ", " + QUESTION + ", " + ANSWER + ") values(new." + _ID + ", new." + QUESTION + ", new." + ANSWER + "); end";
+
+            private static final String BEFORE_FMT = "create trigger " + _TABLE_NAME + "_before_%1$s before %1$s %2$s on "
+                    + _TABLE_NAME + " begin delete from " + TaskFullTextIndex._TABLE_NAME + " where " + TaskFullTextIndex._DOC_ID +
+                    "=old." + _ID + "; end";
+
+            private static final String RELEVANT_UPDATE_COLUMNS = "of " + Task.QUESTION + ", " + Task.ANSWER;
+
+            static final String AFTER_INSERT = String.format(AFTER_FMT, "insert", "");
+
+            static final String BEFORE_UPDATE = String.format(BEFORE_FMT, "update", RELEVANT_UPDATE_COLUMNS);
+
+            static final String AFTER_UPDATE = String.format(AFTER_FMT, "update", RELEVANT_UPDATE_COLUMNS);
+
+            static final String BEFORE_DELETE = String.format(BEFORE_FMT, "delete", "");
+        }
     }
 
     public static final class TaskFullTextIndex {
@@ -126,30 +151,6 @@ public final class Db {
                 Task.QUESTION + ", "
                 + Task.ANSWER + "," +
                 "tokenize=porter)";
-
-        static final class Triggers {
-
-            private Triggers() {
-                // nope
-            }
-
-            private static final String AFTER_FMT = "create trigger " + Task._TABLE_NAME + "_after_%1$s after %1$s %2$s on "
-                    + Task._TABLE_NAME + " begin insert into " + _TABLE_NAME + "(" + _DOC_ID + ", " + Task.QUESTION + ", " +
-                    Task.ANSWER + ") values(new." + Task._ID + ", new." + Task.QUESTION + ", new." + Task.ANSWER + "); end";
-
-            private static final String BEFORE_FMT = "create trigger " + Task._TABLE_NAME + "_before_%1$s before %1$s %2$s on "
-                    + Task._TABLE_NAME + " begin delete from " + _TABLE_NAME + " where " + _DOC_ID + "=old." + Task._ID + "; end";
-
-            private static final String RELEVANT_UPDATE_COLUMNS = "of " + Task.QUESTION + ", " + Task.ANSWER;
-
-            static final String AFTER_INSERT = String.format(AFTER_FMT, "insert", "");
-
-            static final String BEFORE_UPDATE = String.format(BEFORE_FMT, "update", RELEVANT_UPDATE_COLUMNS);
-
-            static final String AFTER_UPDATE = String.format(AFTER_FMT, "update", RELEVANT_UPDATE_COLUMNS);
-
-            static final String BEFORE_DELETE = String.format(BEFORE_FMT, "delete", "");
-        }
     }
 
     private Db() {
