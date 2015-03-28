@@ -109,6 +109,10 @@ public class MnemonicActivity extends Activity implements
 
         setContentView(R.layout.activity_mnemonic);
         setActionBar((Toolbar) findViewById(R.id.toolbar));
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         handler = new Handler(Looper.getMainLooper());
         afterSwipeAnimationDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);

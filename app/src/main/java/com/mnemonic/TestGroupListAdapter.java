@@ -41,7 +41,7 @@ public class TestGroupListAdapter extends RecyclerView.Adapter<TestGroupListAdap
         @Override
         public void onClick(View v) {
             if (onTestGroupClickListener != null) {
-                onTestGroupClickListener.onTestGroupClick(getPosition(), testGroup);
+                onTestGroupClickListener.onTestGroupClick(getLayoutPosition(), testGroup);
             }
         }
 

@@ -36,7 +36,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskIt
 
         @Override
         public void onClick(View v) {
-            onTaskClickListener.onTaskClick(getPosition());
+            onTaskClickListener.onTaskClick(getLayoutPosition());
         }
 
         public void bind(Task task) {

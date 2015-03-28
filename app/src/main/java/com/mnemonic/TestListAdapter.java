@@ -66,14 +66,14 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
         @Override
         public void onClick(View v) {
             if (onTestClickListener != null) {
-                onTestClickListener.onTestClick(getPosition(), test, taskFilterForView(v));
+                onTestClickListener.onTestClick(getLayoutPosition(), test, taskFilterForView(v));
             }
         }
 
         @Override
         public boolean onLongClick(View v) {
             if (onTestLongClickListener != null) {
-                onTestLongClickListener.onTestLongClick(getPosition(), test, taskFilterForView(v));
+                onTestLongClickListener.onTestLongClick(getLayoutPosition(), test, taskFilterForView(v));
 
                 return true;
             }
@@ -102,7 +102,7 @@ public class TestListAdapter extends RecyclerView.Adapter<TestListAdapter.TestIt
             commentedImage.setActivated(false);
 
             // mark the selection for the current test
-            TaskFilter taskFilter = getSelection(getPosition());
+            TaskFilter taskFilter = getSelection(getLayoutPosition());
             if (taskFilter != null) {
                 viewForTaskFilter(taskFilter).setActivated(true);
             }

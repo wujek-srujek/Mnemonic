@@ -154,7 +154,7 @@ public class HorizontallySwipeableRecyclerView extends RecyclerView {
 
         View touchedView = findChildViewUnder(touchX, touchY);
         if (touchedView != null) {
-            int touchedViewPosition = getChildPosition(touchedView);
+            int touchedViewPosition = getChildLayoutPosition(touchedView);
             if (swipeListener.isSwipeable(touchedView, touchedViewPosition)) {
                 tracker = VelocityTracker.obtain();
                 tracker.addMovement(e);
