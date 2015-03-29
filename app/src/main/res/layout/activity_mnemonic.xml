@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.mnemonic.view.HorizontallySwipeableRecyclerView
+            <com.mnemonic.view.recycler.HorizontallySwipeableRecyclerView
                 android:id="@+id/test_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

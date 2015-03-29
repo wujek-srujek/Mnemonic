@@ -1,4 +1,4 @@
-package com.mnemonic.view;
+package com.mnemonic.view.recycler;
 
 
 import android.content.Context;
@@ -72,20 +72,6 @@ public class HorizontallySwipeableRecyclerView extends RecyclerView {
         maxFlingVelocity = vc.getScaledMaximumFlingVelocity();
         minFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
         swipingEnabled = true;
-
-        setOnScrollListener(new RecyclerView.OnScrollListener() {
-
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                setSwipingEnabled(newState == RecyclerView.SCROLL_STATE_IDLE);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                // nothing
-            }
-        });
-
         reset();
     }
 
@@ -99,7 +85,7 @@ public class HorizontallySwipeableRecyclerView extends RecyclerView {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent e) {
-        if (supportsSwiping()) {
+        if (swipingActive()) {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     onActionDown(e);
@@ -232,7 +218,7 @@ public class HorizontallySwipeableRecyclerView extends RecyclerView {
         xDeltaBeforeDetection = 0;
     }
 
-    private boolean supportsSwiping() {
+    private boolean swipingActive() {
         return swipingEnabled && swipeListener != null;
     }
 }

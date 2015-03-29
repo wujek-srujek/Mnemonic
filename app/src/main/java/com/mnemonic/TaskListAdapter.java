@@ -1,82 +1,61 @@
 package com.mnemonic;
 
 
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.mnemonic.db.Task;
+import com.mnemonic.view.recycler.ListAdapter;
+import com.mnemonic.view.recycler.ViewHolder;
 
 import java.util.List;
 
 
-public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskItemViewHolder> {
+public class TaskListAdapter extends ListAdapter<Task, TaskListAdapter.TaskiewHolder, Void> {
 
-    public interface OnTaskClickListener {
+    static class TaskiewHolder extends ViewHolder<Task, Void> {
 
-        void onTaskClick(int position);
-    }
+        private final TextView taskQuestionTextView;
 
-    class TaskItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private final TextView taskAnswerTextView;
 
-        final TextView taskQuestionTextView;
-
-        final TextView taskAnswerTextView;
-
-        TaskItemViewHolder(View itemView) {
+        TaskiewHolder(View itemView) {
             super(itemView);
 
             taskQuestionTextView = (TextView) itemView.findViewById(R.id.task_list_item_question_label);
             taskAnswerTextView = (TextView) itemView.findViewById(R.id.task_list_item_answer_label);
-
-            itemView.setOnClickListener(this);
         }
 
         @Override
-        public void onClick(View v) {
-            onTaskClickListener.onTaskClick(getLayoutPosition());
-        }
-
-        public void bind(Task task) {
-            taskQuestionTextView.setText(task.getQuestion());
-            if (task.getPagesCount() > 1) {
-                taskAnswerTextView.setText(task.getAnswer());
+        protected void onBound(int position) {
+            taskQuestionTextView.setText(item.getQuestion());
+            if (item.getPagesCount() > 1) {
+                taskAnswerTextView.setText(item.getAnswer());
                 taskAnswerTextView.setVisibility(View.VISIBLE);
             } else {
                 taskAnswerTextView.setText(null);
                 taskAnswerTextView.setVisibility(View.GONE);
             }
         }
+
+        @Override
+        protected void onUnbound() {
+            taskQuestionTextView.setText(null);
+            taskAnswerTextView.setText(null);
+            taskAnswerTextView.setVisibility(View.VISIBLE);
+        }
     }
 
-    private final List<Task> tasks;
-
-    private OnTaskClickListener onTaskClickListener;
-
-    public TaskListAdapter(List<Task> tasks) {
-        this.tasks = tasks;
+    public TaskListAdapter(List<Task> items) {
+        super(items);
     }
 
     @Override
-    public TaskItemViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public TaskiewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View taskItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.task_list_item, viewGroup, false);
 
-        return new TaskItemViewHolder(taskItemView);
-    }
-
-    @Override
-    public void onBindViewHolder(TaskItemViewHolder holder, int position) {
-        holder.bind(tasks.get(position));
-    }
-
-    public void setOnTestClickListener(OnTaskClickListener onTaskClickListener) {
-        this.onTaskClickListener = onTaskClickListener;
-    }
-
-    @Override
-    public int getItemCount() {
-        return tasks.size();
+        return new TaskiewHolder(taskItemView);
     }
 }

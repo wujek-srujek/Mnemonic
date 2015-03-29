@@ -342,6 +342,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void enableAllTestsForTestGroup(TestGroup testGroup) {
         getWritableDatabase().execSQL(ENABLE_ALL_TESTS_FOR_TEST_GROUP, new String[]{"" + testGroup._id});
+
+        testGroup.enabledCount = testGroup.testCount;
     }
 
     public void deleteTestGroup(TestGroup testGroup) {

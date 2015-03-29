@@ -21,13 +21,14 @@ import com.mnemonic.db.DbHelper;
 import com.mnemonic.db.SearchException;
 import com.mnemonic.db.Task;
 import com.mnemonic.db.TestGroup;
+import com.mnemonic.view.recycler.ListAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 
-public class TaskSearchActivity extends Activity implements SearchView.OnQueryTextListener, TaskListAdapter.OnTaskClickListener {
+public class TaskSearchActivity extends Activity {
 
     private static final String TAG = TaskSearchActivity.class.getSimpleName();
 
@@ -42,6 +43,8 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
     private List<Task> foundTasks;
 
     private TestGroup testGroup;
+
+    private ListAdapter.OnItemClickListener<Task, Void> onTaskClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +67,26 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
 
         testGroup = dbHelper.getCurrentTestGroup();
 
+        onTaskClickListener = new ListAdapter.OnItemClickListener<Task, Void>() {
+
+            @Override
+            public void onItemClick(int position, Task item, Void extra, View view) {
+                int pagesCount = 0;
+                ArrayList<Task> tasks = new ArrayList<>(foundTasks.size());
+                for (Task foundTask : foundTasks) {
+                    pagesCount += foundTask.getPagesCount();
+                    tasks.add(foundTask);
+                }
+
+                Intent intent = new Intent(TaskSearchActivity.this, TestActivity.class);
+                intent.putParcelableArrayListExtra(TestActivity.TASKS_EXTRA, tasks);
+                intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);
+                intent.putExtra(TestActivity.START_TASK_INDEX_EXTRA, position);
+
+                startActivity(intent);
+            }
+        };
+
         showSearchResults();
     }
 
@@ -78,7 +101,20 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
         searchView = (SearchView) searchMenuItem.getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setQuery(getIntent().getStringExtra(SearchManager.QUERY), false);
-        searchView.setOnQueryTextListener(this);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchView.clearFocus();
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         searchView.clearFocus();
 
         return true;
@@ -89,35 +125,6 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
         setIntent(intent);
 
         showSearchResults();
-    }
-
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        searchView.clearFocus();
-
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        return false;
-    }
-
-    @Override
-    public void onTaskClick(int position) {
-        int pagesCount = 0;
-        ArrayList<Task> tasks = new ArrayList<>(foundTasks.size());
-        for (Task foundTask : foundTasks) {
-            pagesCount += foundTask.getPagesCount();
-            tasks.add(foundTask);
-        }
-
-        Intent intent = new Intent(this, TestActivity.class);
-        intent.putExtra(TestActivity.TASKS_EXTRA, tasks);
-        intent.putExtra(TestActivity.PAGES_COUNT_EXTRA, pagesCount);
-        intent.putExtra(TestActivity.START_TASK_INDEX_EXTRA, position);
-
-        startActivity(intent);
     }
 
     private void showSearchResults() {
@@ -137,7 +144,7 @@ public class TaskSearchActivity extends Activity implements SearchView.OnQueryTe
             noResultsLabel.setVisibility(View.GONE);
 
             TaskListAdapter taskListAdapter = new TaskListAdapter(foundTasks);
-            taskListAdapter.setOnTestClickListener(this);
+            taskListAdapter.setOnItemClickListener(onTaskClickListener);
             taskList.setAdapter(taskListAdapter);
         } else {
             taskList.setVisibility(View.GONE);
