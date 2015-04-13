@@ -4,4 +4,5 @@
           android:layout_height="match_parent"
           android:gravity="center"
           android:padding="@dimen/spacing_big"
+          android:textIsSelectable="true"
           android:textAppearance="?attr/textAppearanceExtraLarge"/>
