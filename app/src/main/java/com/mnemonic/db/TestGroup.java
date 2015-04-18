@@ -3,7 +3,7 @@ package com.mnemonic.db;
 
 public class TestGroup {
 
-    final long _id;
+    private final long _id;
 
     private final String name;
 
@@ -22,6 +22,10 @@ public class TestGroup {
         this.current = current;
         this.testCount = testCount;
         this.enabledCount = enabledCount;
+    }
+
+    public long getId() {
+        return _id;
     }
 
     public String getName() {
@@ -50,7 +54,7 @@ public class TestGroup {
 
     @Override
     public String toString() {
-        return String.format("%s[name=%s, creationTimestamp=%d, current=%b, testCount=%d, enabledCount=%d]",
-                getClass().getSimpleName(), name, creationTimestamp, current, testCount, enabledCount);
+        return String.format("%s[_id=%d, name=%s, creationTimestamp=%d, current=%b, testCount=%d, enabledCount=%d]",
+                getClass().getSimpleName(), _id, name, creationTimestamp, current, testCount, enabledCount);
     }
 }

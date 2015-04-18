@@ -194,7 +194,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public Test addTest(TestGroup testGroup, String name, String description) {
         ContentValues values = new ContentValues(3);
-        values.put(Db.Test._TEST_GROUP_ID, testGroup._id);
+        values.put(Db.Test._TEST_GROUP_ID, testGroup.getId());
         values.put(Db.Test.NAME, name);
         values.put(Db.Test.DESCRIPTION, description);
 
@@ -210,7 +210,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public Task addTask(Test test, String question, String answer) {
         ContentValues values = new ContentValues(3);
-        values.put(Db.Task._TEST_ID, test._id);
+        values.put(Db.Task._TEST_ID, test.getId());
         values.put(Db.Task.QUESTION, question);
         values.put(Db.Task.ANSWER, answer);
 
@@ -237,7 +237,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void refreshTestGroup(TestGroup testGroup) {
-        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_GROUP, new String[]{"" + testGroup._id});
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST_GROUP, new String[]{"" + testGroup.getId()});
         cursor.moveToNext();
         testGroup.current = cursor.getInt(cursor.getColumnIndex(Db.TestGroup.CURRENT)) != 0;
         testGroup.testCount = cursor.getInt(cursor.getColumnIndex(TEST_GROUP_TEST_COUNT));
@@ -258,13 +258,13 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void markTestGroupCurrent(TestGroup testGroup) {
         // just set the current column, the after update trigger does the rest
-        getWritableDatabase().execSQL(MARK_TEST_GROUP_CURRENT, new String[]{"" + testGroup._id});
+        getWritableDatabase().execSQL(MARK_TEST_GROUP_CURRENT, new String[]{"" + testGroup.getId()});
 
         testGroup.current = true;
     }
 
     public List<Test> getEnabledTestsForTestGroup(TestGroup testGroup) {
-        Cursor cursor = getReadableDatabase().rawQuery(SELECT_ENABLED_TESTS_FOR_TEST_GROUP, new String[]{"" + testGroup._id});
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_ENABLED_TESTS_FOR_TEST_GROUP, new String[]{"" + testGroup.getId()});
         List<Test> tests = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
             tests.add(testFromCursor(cursor));
@@ -275,7 +275,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public Set<TaskFilter> getExistingTaskFiltersForTestGroup(TestGroup testGroup) {
-        Cursor cursor = getReadableDatabase().rawQuery(TASK_EXISTENCE_CHECK_FOR_TEST_GROUP, new String[]{"" + testGroup._id});
+        Cursor cursor = getReadableDatabase().rawQuery(TASK_EXISTENCE_CHECK_FOR_TEST_GROUP, new String[]{"" + testGroup.getId()});
         cursor.moveToNext();
         Set<TaskFilter> existingTasksFilters = filtersFromCursor(cursor);
         cursor.close();
@@ -284,7 +284,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void refreshTest(Test test) {
-        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST, new String[]{"" + test._id});
+        Cursor cursor = getReadableDatabase().rawQuery(SELECT_TEST, new String[]{"" + test.getId()});
         cursor.moveToNext();
         test.availableTaskFilters = filtersFromCursor(cursor);
         cursor.close();
@@ -292,7 +292,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public List<Task> getTasksForTest(Test test, TaskFilter taskFilter) {
         String query = TASK_GETTERS.get(taskFilter);
-        Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test._id});
+        Cursor cursor = getReadableDatabase().rawQuery(query, new String[]{"" + test.getId()});
         List<Task> tasks = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
             tasks.add(taskFromCursor(cursor, test));
@@ -306,7 +306,7 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor;
         List<Task> tasks;
         try {
-            cursor = getReadableDatabase().rawQuery(TASK_SEARCH_FOR_TEST_GROUP, new String[]{query, "" + testGroup._id});
+            cursor = getReadableDatabase().rawQuery(TASK_SEARCH_FOR_TEST_GROUP, new String[]{query, "" + testGroup.getId()});
             tasks = new ArrayList<>(cursor.getCount());
         } catch (SQLiteException e) {
             throw new SearchException(e);
@@ -335,20 +335,20 @@ public class DbHelper extends SQLiteOpenHelper {
             return;
         }
 
-        getWritableDatabase().execSQL(TEST_ENABLED_STATE_UPDATE, new String[]{"" + (enabled ? 1 : 0), "" + test._id});
+        getWritableDatabase().execSQL(TEST_ENABLED_STATE_UPDATE, new String[]{"" + (enabled ? 1 : 0), "" + test.getId()});
 
         test.enabled = enabled;
     }
 
     public void enableAllTestsForTestGroup(TestGroup testGroup) {
-        getWritableDatabase().execSQL(ENABLE_ALL_TESTS_FOR_TEST_GROUP, new String[]{"" + testGroup._id});
+        getWritableDatabase().execSQL(ENABLE_ALL_TESTS_FOR_TEST_GROUP, new String[]{"" + testGroup.getId()});
 
         testGroup.enabledCount = testGroup.testCount;
     }
 
     public void deleteTestGroup(TestGroup testGroup) {
         // just delete the test group, cascading and triggers does the rest
-        getWritableDatabase().execSQL(DELETE_TEST_GROUP, new String[]{"" + testGroup._id});
+        getWritableDatabase().execSQL(DELETE_TEST_GROUP, new String[]{"" + testGroup.getId()});
     }
 
     public void setTaskFavorite(Task task, boolean favorite) {
@@ -365,7 +365,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private void setTaskProperty(Task task, TaskFilter taskFilter, String value) {
         String updateSql = TASK_UPDATERS.get(taskFilter);
-        getWritableDatabase().execSQL(updateSql, new String[]{value, "" + task._id});
+        getWritableDatabase().execSQL(updateSql, new String[]{value, "" + task.getId()});
     }
 
     private TestGroup testGroupFromCursor(Cursor cursor) {

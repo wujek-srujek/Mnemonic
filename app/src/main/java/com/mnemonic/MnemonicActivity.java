@@ -568,7 +568,7 @@ public class MnemonicActivity extends Activity {
                 testListAdapter = new TestListAdapter(tests, new Extras<TaskFilter>(tests.size()), getString(R.string.default_test_name));
                 testListAdapter.setOnItemClickListener(onTestClickListener);
                 testListAdapter.setOnItemLongClickListener(onTestLongClickListener);
-                testList.setAdapter(testListAdapter);
+                testList.swapAdapter(testListAdapter, false);
             } else {
                 showEmptyTestListMessage(currentTestGroup.getTestCount() > 0 ?
                         R.string.all_tests_disabled_in_test_group : R.string.no_tests_in_test_group);

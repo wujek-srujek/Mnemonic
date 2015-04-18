@@ -132,6 +132,8 @@ public class TestListAdapter extends ListAdapter<Test, TestListAdapter.TestViewH
         super(items, extras);
 
         this.defaultTestName = defaultTestName;
+
+        setHasStableIds(true);
     }
 
     @Override
@@ -139,5 +141,10 @@ public class TestListAdapter extends ListAdapter<Test, TestListAdapter.TestViewH
         View testItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.test_list_item, viewGroup, false);
 
         return new TestViewHolder(testItemView, defaultTestName);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return items.get(position).getId();
     }
 }

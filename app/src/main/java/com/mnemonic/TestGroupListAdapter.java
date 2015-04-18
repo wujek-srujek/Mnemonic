@@ -64,6 +64,8 @@ public class TestGroupListAdapter extends ListAdapter<TestGroup, TestGroupListAd
 
         this.defaultGroupTestName = defaultGroupTestName;
         this.context = context;
+
+        setHasStableIds(true);
     }
 
     @Override
@@ -71,5 +73,10 @@ public class TestGroupListAdapter extends ListAdapter<TestGroup, TestGroupListAd
         View testGroupItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.test_group_list_item, viewGroup, false);
 
         return new TestGroupViewHolder(testGroupItemView, defaultGroupTestName, context);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return items.get(position).getId();
     }
 }

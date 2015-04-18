@@ -23,7 +23,7 @@ public class Test implements Parcelable {
         }
     };
 
-    final long _id;
+    private final long _id;
 
     private final String name;
 
@@ -46,6 +46,10 @@ public class Test implements Parcelable {
         this.taskCount = taskCount;
         this.pagesCount = pagesCount;
         this.availableTaskFilters = availableTaskFilters;
+    }
+
+    public long getId() {
+        return _id;
     }
 
     public String getName() {
@@ -109,7 +113,7 @@ public class Test implements Parcelable {
 
     @Override
     public String toString() {
-        return String.format("%s[name=%s, description=%s, enabled=%b, taskCount=%d, pagesCount=%d, availableTaskFilters=%s]",
-                getClass().getSimpleName(), name, description, enabled, taskCount, pagesCount, availableTaskFilters);
+        return String.format("%s[_id=%d, name=%s, description=%s, enabled=%b, taskCount=%d, pagesCount=%d, availableTaskFilters=%s]",
+                getClass().getSimpleName(), _id, name, description, enabled, taskCount, pagesCount, availableTaskFilters);
     }
 }

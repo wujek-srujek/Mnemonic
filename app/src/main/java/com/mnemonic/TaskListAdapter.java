@@ -50,6 +50,8 @@ public class TaskListAdapter extends ListAdapter<Task, TaskListAdapter.TaskiewHo
 
     public TaskListAdapter(List<Task> items) {
         super(items);
+
+        setHasStableIds(true);
     }
 
     @Override
@@ -57,5 +59,10 @@ public class TaskListAdapter extends ListAdapter<Task, TaskListAdapter.TaskiewHo
         View taskItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.task_list_item, viewGroup, false);
 
         return new TaskiewHolder(taskItemView);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return items.get(position).getId();
     }
 }

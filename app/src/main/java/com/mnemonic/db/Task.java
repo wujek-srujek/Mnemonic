@@ -23,7 +23,7 @@ public class Task implements Parcelable {
         }
     };
 
-    final Long _id;
+    private final Long _id;
 
     private final String question;
 
@@ -42,6 +42,10 @@ public class Task implements Parcelable {
         this.favorite = favorite;
         this.comment = comment;
         this.test = test;
+    }
+
+    public long getId() {
+        return _id;
     }
 
     public String getQuestion() {
@@ -107,8 +111,8 @@ public class Task implements Parcelable {
 
     @Override
     public String toString() {
-        return String.format("%s[question=%s, answer=%s, favorite=%b, comment=%s, test=%s]",
-                getClass().getSimpleName(), question.replaceAll("\n", "|"),
+        return String.format("%s[_id=%d, question=%s, answer=%s, favorite=%b, comment=%s, test=%s]",
+                getClass().getSimpleName(), _id, question.replaceAll("\n", "|"),
                 answer != null ? answer.replaceAll("\n", "|") : null,
                 favorite, comment != null ? comment.replaceAll("\n", "|") : null,
                 test);
