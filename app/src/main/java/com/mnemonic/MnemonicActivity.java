@@ -170,6 +170,7 @@ public class MnemonicActivity extends Activity {
                     public void onAnimationEnd(Animator animation) {
                         Test test = testListAdapter.getItem(position);
                         dbHelper.setTestEnabled(test, false);
+                        dbHelper.refreshTestGroup(currentTestGroup);
 
                         // deleting the item will trigger recycler view animations
                         // when they are done, the animator will be called to finish
@@ -182,7 +183,30 @@ public class MnemonicActivity extends Activity {
                 }).start();
             }
         });
+
         testList.setItemAnimator(new DefaultItemAnimator() {
+
+            private int animationsCount = 0;
+
+            @Override
+            public void onRemoveStarting(RecyclerView.ViewHolder item) {
+                ++animationsCount;
+            }
+
+            @Override
+            public void onAddStarting(RecyclerView.ViewHolder item) {
+                ++animationsCount;
+            }
+
+            @Override
+            public void onMoveStarting(RecyclerView.ViewHolder item) {
+                ++animationsCount;
+            }
+
+            @Override
+            public void onChangeStarting(RecyclerView.ViewHolder item, boolean oldItem) {
+                ++animationsCount;
+            }
 
             @Override
             public void onRemoveFinished(RecyclerView.ViewHolder item) {
@@ -191,15 +215,50 @@ public class MnemonicActivity extends Activity {
                 item.itemView.setAlpha(1.F);
                 item.itemView.setTranslationX(0.F);
 
-                // enable swiping again after dismissal has been processed
-                testList.setSwipingEnabled(true);
-
-                dbHelper.refreshTestGroup(currentTestGroup);
-
-                // if there are no enabled tests, show the message
+                // when all animations are done, refresh the test list views if necessary
                 if (testListAdapter.getItemCount() == 0) {
-                    showEmptyTestListMessage(R.string.all_tests_disabled_in_test_group);
+                    isRunning(new ItemAnimatorFinishedListener() {
+
+                        @Override
+                        public void onAnimationsFinished() {
+                            showEmptyTestListMessage(R.string.all_tests_disabled_in_test_group);
+                        }
+                    });
                 }
+
+                enableSwipingAfterAnimations();
+            }
+
+            @Override
+            public void onAddFinished(RecyclerView.ViewHolder item) {
+                enableSwipingAfterAnimations();
+            }
+
+            @Override
+            public void onMoveFinished(RecyclerView.ViewHolder item) {
+                enableSwipingAfterAnimations();
+            }
+
+            @Override
+            public void onChangeFinished(RecyclerView.ViewHolder item, boolean oldItem) {
+                enableSwipingAfterAnimations();
+            }
+
+            private void enableSwipingAfterAnimations() {
+                if (animationsCount == 1) {
+                    // current animations count is 1 which means the last animation has just finished
+                    // this makes sure that the callback will be called only once; for example, when a
+                    // removal triggers multiple moves, this callback will be called after the last one
+                    isRunning(new ItemAnimatorFinishedListener() {
+
+                        @Override
+                        public void onAnimationsFinished() {
+                            testList.setSwipingEnabled(true);
+                        }
+                    });
+                }
+
+                --animationsCount;
             }
         });
 
@@ -486,15 +545,44 @@ public class MnemonicActivity extends Activity {
     }
 
     public void enableAllTests(MenuItem menuItem) {
-        enableAllTests();
+        // disable swiping while adds/moves are being processed
+        testList.setSwipingEnabled(false);
+
+        dbHelper.enableAllTestsForTestGroup(currentTestGroup);
+
+        initTestList();
     }
 
     public void deleteTestGroup(MenuItem menuItem) {
-        deleteTestGroup();
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.alert_delete_test_group)
+                .setPositiveButton(R.string.alert_yes, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dbHelper.deleteTestGroup(currentTestGroup);
+                        testGroupListAdapter.deleteItem(testGroupListAdapter.getExtras().getPositions()[0]);
+                        currentTestGroup = null;
+                        testListAdapter = null;
+                        testList.setAdapter(null);
+
+                        updateTitle();
+                        showEmptyTestListMessage(R.string.no_test_group_chosen);
+
+                        if (testGroupListAdapter.getItemCount() == 0) {
+                            refreshDrawerViews();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.alert_no, null)
+                .show();
     }
 
     public void browse(MenuItem menuItem) {
-        browse();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("text/plain");
+        startActivityForResult(intent, 0);
     }
 
     private void applyMultitestEvent(int position, TaskFilter oldTaskFilter, TaskFilter newTaskFilter) {
@@ -594,44 +682,6 @@ public class MnemonicActivity extends Activity {
         testList.setVisibility(View.GONE);
         emptyTestListInfoLabel.setVisibility(View.VISIBLE);
         emptyTestListInfoLabel.setText(id);
-    }
-
-    private void enableAllTests() {
-        dbHelper.enableAllTestsForTestGroup(currentTestGroup);
-
-        initTestList();
-    }
-
-    private void deleteTestGroup() {
-        new AlertDialog.Builder(this)
-                .setMessage(R.string.alert_delete_test_group)
-                .setPositiveButton(R.string.alert_yes, new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dbHelper.deleteTestGroup(currentTestGroup);
-                        testGroupListAdapter.deleteItem(testGroupListAdapter.getExtras().getPositions()[0]);
-                        currentTestGroup = null;
-                        testListAdapter = null;
-                        testList.setAdapter(null);
-
-                        updateTitle();
-                        showEmptyTestListMessage(R.string.no_test_group_chosen);
-
-                        if (testGroupListAdapter.getItemCount() == 0) {
-                            refreshDrawerViews();
-                        }
-                    }
-                })
-                .setNegativeButton(R.string.alert_no, null)
-                .show();
-    }
-
-    private void browse() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("text/plain");
-        startActivityForResult(intent, 0);
     }
 
     private void importTestGroup(Uri uri) {
