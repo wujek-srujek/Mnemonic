@@ -15,12 +15,9 @@ import java.util.List;
 
 public class TaskPagerAdapter extends PagerAdapter {
 
-    private final LayoutInflater inflater;
-
     private final List<TaskPage> pages;
 
-    public TaskPagerAdapter(LayoutInflater inflater, List<TaskPage> pages) {
-        this.inflater = inflater;
+    public TaskPagerAdapter(List<TaskPage> pages) {
         this.pages = pages;
     }
 
@@ -33,7 +30,7 @@ public class TaskPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         TaskPage currentPage = pages.get(position);
 
-        TextView textView = (TextView) inflater.inflate(R.layout.task_page, container, false);
+        TextView textView = (TextView) LayoutInflater.from(container.getContext()).inflate(R.layout.task_page, container, false);
         textView.setText(currentPage.getText());
         container.addView(textView);
 

@@ -245,7 +245,7 @@ public class TestActivity extends Activity {
             taskPages.addAll(task.getPages(++i));
         }
 
-        taskPagerAdapter = new TaskPagerAdapter(getLayoutInflater(), taskPages);
+        taskPagerAdapter = new TaskPagerAdapter(taskPages);
         taskPager.setAdapter(taskPagerAdapter);
 
         taskPager.setCurrentItem(pageIndex, false);
