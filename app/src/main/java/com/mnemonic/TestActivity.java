@@ -7,6 +7,7 @@ import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
@@ -143,6 +144,7 @@ public class TestActivity extends Activity {
                 // nope
             }
         });
+        taskPager.setPageTransformer(true, new CardPageTransformer());
 
         initPager(startTaskIndex);
     }
@@ -245,7 +247,7 @@ public class TestActivity extends Activity {
             taskPages.addAll(task.getPages(++i));
         }
 
-        taskPagerAdapter = new TaskPagerAdapter(taskPages);
+        taskPagerAdapter = new TaskPagerAdapter(taskPages, Typeface.createFromAsset(getAssets(), "engine-regular.otf"));
         taskPager.setAdapter(taskPagerAdapter);
 
         taskPager.setCurrentItem(pageIndex, false);

@@ -1,6 +1,7 @@
 package com.mnemonic;
 
 
+import android.graphics.Typeface;
 import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,8 +18,11 @@ public class TaskPagerAdapter extends PagerAdapter {
 
     private final List<TaskPage> pages;
 
-    public TaskPagerAdapter(List<TaskPage> pages) {
+    private final Typeface typeface;
+
+    public TaskPagerAdapter(List<TaskPage> pages, Typeface typeface) {
         this.pages = pages;
+        this.typeface = typeface;
     }
 
     @Override
@@ -32,6 +36,7 @@ public class TaskPagerAdapter extends PagerAdapter {
 
         TextView textView = (TextView) LayoutInflater.from(container.getContext()).inflate(R.layout.task_page, container, false);
         textView.setText(currentPage.getText());
+        textView.setTypeface(typeface);
         container.addView(textView);
 
         return textView;
