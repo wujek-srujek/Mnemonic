@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:gravity="center"
-          android:padding="@dimen/spacing_big"
-          android:textIsSelectable="true"
-          android:textAppearance="?attr/textAppearanceExtraLarge"/>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/spacing_big">
+
+    <!--wrapped in a layout with wrap_content so that selecting text is only possible when holding text-->
+    <!--otherwise it is possible to click outside the text and have it selected-->
+    <TextView
+        android:id="@+id/task_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceExtraLarge"
+        android:textIsSelectable="true"/>
+
+</RelativeLayout>

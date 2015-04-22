@@ -15,6 +15,18 @@ import java.util.List;
 
 public class TaskPagerAdapter extends PagerAdapter {
 
+    static class TaskPageViewHolder {
+
+        final View mainView;
+
+        final TextView textView;
+
+        TaskPageViewHolder(View mainView, TextView textView) {
+            this.mainView = mainView;
+            this.textView = textView;
+        }
+    }
+
     private final List<TaskPage> pages;
 
     public TaskPagerAdapter(List<TaskPage> pages) {
@@ -30,23 +42,24 @@ public class TaskPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         TaskPage currentPage = pages.get(position);
 
-        TextView textView = (TextView) LayoutInflater.from(container.getContext()).inflate(R.layout.task_page, container, false);
+        View view = LayoutInflater.from(container.getContext()).inflate(R.layout.task_page, container, false);
+        TextView textView = (TextView) view.findViewById(R.id.task_text);
         textView.setText(currentPage.getText());
-        container.addView(textView);
+        container.addView(view);
 
-        return textView;
+        return new TaskPageViewHolder(view, textView);
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        TextView textView = (TextView) object;
-        textView.setText(null);
-        container.removeView(textView);
+        TaskPageViewHolder viewHolder = (TaskPageViewHolder) object;
+        viewHolder.textView.setText(null);
+        container.removeView(viewHolder.mainView);
     }
 
     @Override
     public boolean isViewFromObject(View view, Object object) {
-        return view == object;
+        return ((TaskPageViewHolder) object).mainView == view;
     }
 
     public TaskPage getTaskPage(int position) {
