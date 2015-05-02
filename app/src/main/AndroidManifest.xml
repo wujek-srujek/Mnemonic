@@ -42,7 +42,8 @@
 
         <activity
             android:name=".TestActivity"
-            android:parentActivityName=".MnemonicActivity"/>
+            android:parentActivityName=".MnemonicActivity"
+            android:windowSoftInputMode="adjustNothing"/>
 
         <activity
             android:name=".CommentActivity"

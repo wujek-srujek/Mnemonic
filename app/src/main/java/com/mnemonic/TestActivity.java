@@ -108,16 +108,17 @@ public class TestActivity extends Activity {
             @Override
             public boolean onDrag(View v, DragEvent event) {
                 switch (event.getAction()) {
-                    case DragEvent.ACTION_DRAG_STARTED:
+                    case DragEvent.ACTION_DRAG_ENTERED:
                         favoriteButton.setVisibility(View.INVISIBLE);
                         break;
 
                     case DragEvent.ACTION_DROP:
                         favoriteButton.setY(event.getY() - favoriteButton.getHeight() / 2.F);
                         favoriteButton.setX(event.getX() - favoriteButton.getWidth() / 2.F);
+                        favoriteButton.setVisibility(View.VISIBLE);
                         break;
 
-                    case DragEvent.ACTION_DRAG_ENDED:
+                    case DragEvent.ACTION_DRAG_EXITED:
                         favoriteButton.setVisibility(View.VISIBLE);
                         break;
                 }
