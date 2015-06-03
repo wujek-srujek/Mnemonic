@@ -32,7 +32,6 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -92,7 +91,7 @@ public class MnemonicActivity extends Activity {
 
     private TestListAdapter testListAdapter;
 
-    private ImageButton startMultitestButton;
+    private View startMultitestButton;
 
     private ActionMode multitestMode;
 
@@ -263,7 +262,7 @@ public class MnemonicActivity extends Activity {
         });
 
         emptyTestListInfoLabel = (TextView) findViewById(R.id.empty_test_list_info_label);
-        startMultitestButton = (ImageButton) findViewById(R.id.start_multitest_button);
+        startMultitestButton = findViewById(R.id.start_multitest_button);
 
         onTestGroupClickListener = new ListAdapter.OnItemClickListener<TestGroup, Boolean>() {
 

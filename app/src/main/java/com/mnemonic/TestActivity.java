@@ -9,12 +9,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewPager;
 import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.SearchView;
 import android.widget.Toolbar;
 
@@ -44,7 +44,7 @@ public class TestActivity extends Activity {
 
     private ViewPager taskPager;
 
-    private ImageButton favoriteButton;
+    private FloatingActionButton favoriteButton;
 
     private ArrayList<Task> orderedTasks;
 
@@ -83,7 +83,7 @@ public class TestActivity extends Activity {
         }
 
         taskPager = (ViewPager) findViewById(R.id.task_pager);
-        favoriteButton = (ImageButton) findViewById(R.id.test_favorite_button);
+        favoriteButton = (FloatingActionButton) findViewById(R.id.test_favorite_button);
 
         if (orderedTasks.isEmpty()) {
             taskPager.setVisibility(View.GONE);

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="MnemonicTheme" parent="android:Theme.Material.NoActionBar">
+    <style name="MnemonicTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
         <item name="drawerArrowStyle">@style/MnemonicDrawerArrowToggleStyle</item>
         <item name="android:editTextStyle">@style/MnemonicEditTextStyle</item>
-        <item name="floatingActionButtonStyle">@style/MnemonicFabStyle</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowSoftInputMode">adjustResize</item>
         <item name="textAppearanceExtraLarge">@style/MnemonicTextAppearance.ExtraLarge</item>
@@ -26,16 +25,11 @@
         <item name="android:padding">@dimen/spacing_big</item>
     </style>
 
-    <style name="MnemonicFabStyle" parent="android:Widget.ImageButton">
-        <item name="android:background">@drawable/fab_background_ripple_accent</item>
-        <item name="android:elevation">4dp</item>
-    </style>
-
     <style name="MnemonicTextAppearance.ExtraLarge" parent="android:TextAppearance.Large">
         <item name="android:textSize">25sp</item>
     </style>
 
-    <style name="MnemonicSingleLineTextStyle" parent="@android:style/TextAppearance.Medium">
+    <style name="MnemonicSingleLineTextStyle" parent="android:TextAppearance.Medium">
         <item name="android:singleLine">true</item>
     </style>
 
