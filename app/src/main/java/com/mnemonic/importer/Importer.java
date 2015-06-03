@@ -96,7 +96,7 @@ public class Importer {
                         break;
                 }
 
-                if (name != null && name.isEmpty()) {
+                if (name.isEmpty()) {
                     name = null;
                 }
                 if (description != null && description.isEmpty()) {

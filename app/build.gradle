@@ -19,7 +19,7 @@ android {
     }
 }
 
-def v = '22.1.1'
+def v = '22.2.0'
 
 dependencies {
     compile "com.android.support:support-annotations:$v"

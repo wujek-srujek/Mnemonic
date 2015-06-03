@@ -13,15 +13,15 @@ import com.mnemonic.view.recycler.ViewHolder;
 import java.util.List;
 
 
-public class TaskListAdapter extends ListAdapter<Task, TaskListAdapter.TaskiewHolder, Void> {
+public class TaskListAdapter extends ListAdapter<Task, TaskListAdapter.TaskViewHolder, Void> {
 
-    static class TaskiewHolder extends ViewHolder<Task, Void> {
+    static class TaskViewHolder extends ViewHolder<Task, Void> {
 
         private final TextView taskQuestionTextView;
 
         private final TextView taskAnswerTextView;
 
-        TaskiewHolder(View itemView) {
+        TaskViewHolder(View itemView) {
             super(itemView);
 
             taskQuestionTextView = (TextView) itemView.findViewById(R.id.task_list_item_question_label);
@@ -55,10 +55,10 @@ public class TaskListAdapter extends ListAdapter<Task, TaskListAdapter.TaskiewHo
     }
 
     @Override
-    public TaskiewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public TaskViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View taskItemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.task_list_item, viewGroup, false);
 
-        return new TaskiewHolder(taskItemView);
+        return new TaskViewHolder(taskItemView);
     }
 
     @Override
