@@ -22,6 +22,7 @@ done
 for dir in $(find . -type d); do
   if [ -f "$dir/$SIZES_DEF" ]; then
     (
+      echo "Processing '$dir'"
       . "$dir/$SIZES_DEF"
 
       for density in "${!DENSITIES[@]}"; do
@@ -38,14 +39,17 @@ for dir in $(find . -type d); do
         fi
 
         density_dir="${DENSITIES[$density]}"
+        echo "  $(basename "$density_dir")"
         if [ ! -d "$density_dir" ]; then
           echo "Creating missing '$density_dir' directory."
           mkdir "$density_dir"
         fi
 
         for file in $(find "$dir" -name '*.svg'); do
-          outfile="$(basename ${file%.svg}).png"
-          inkscape -z -e "$density_dir/$outfile" -w "${!var_w}" -h "${!var_h}" "$file" > /dev/null
+          basename="$(basename "$file")"
+          echo "    '$basename'"
+          outfilename="${basename%.svg}.png"
+          inkscape -z -e "$density_dir/$outfilename" -w "${!var_w}" -h "${!var_h}" "$file" > /dev/null
         done
       done
     )

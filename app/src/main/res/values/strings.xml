@@ -10,7 +10,7 @@
     <string name="action_all_commented">All commented</string>
     <string name="action_enable_all_tests">Enable all tests</string>
     <string name="action_delete_test_group">Delete test group</string>
-    <string name="action_browse">Browse</string>
+    <string name="action_add_test_group">Add test group</string>
     <string name="alert_delete_test_group">Do you really want to delete the test group?</string>
     <string name="alert_yes">Yes</string>
     <string name="alert_no">No</string>
@@ -31,7 +31,7 @@
     <string name="action_edit_comment">Edit comment</string>
     <string name="add_comment_hint">Add your comment</string>
     <string name="action_apply">Apply</string>
-    <string name="action_cancel_delete">Cancel/delete</string>
+    <string name="action_clear">Clear</string>
     <string name="invalid_query">Invalid search query</string>
     <string name="no_results">No results found for the specified search criteria</string>
 

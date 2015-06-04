@@ -4,6 +4,7 @@
     <style name="MnemonicTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:toolbarStyle">@style/MnemonicToolbarStyle</item>
         <item name="drawerArrowStyle">@style/MnemonicDrawerArrowToggleStyle</item>
+        <item name="android:actionOverflowButtonStyle">@style/MnemonicActionOverflowStyle</item>
         <item name="android:editTextStyle">@style/MnemonicEditTextStyle</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowSoftInputMode">adjustResize</item>
@@ -18,6 +19,10 @@
     <style name="MnemonicDrawerArrowToggleStyle" parent="Widget.AppCompat.DrawerArrowToggle">
         <item name="color">?android:attr/textColorPrimary</item>
         <item name="spinBars">false</item>
+    </style>
+
+    <style name="MnemonicActionOverflowStyle" parent="android:Widget.ActionButton.Overflow">
+        <item name="android:src">@drawable/ic_action_overflow</item>
     </style>
 
     <style name="MnemonicEditTextStyle" parent="android:Widget.EditText">

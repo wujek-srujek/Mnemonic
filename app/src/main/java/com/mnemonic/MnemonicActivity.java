@@ -594,7 +594,7 @@ public class MnemonicActivity extends Activity {
                 .show();
     }
 
-    public void browse(MenuItem menuItem) {
+    public void addTestGroup(MenuItem menuItem) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("text/plain");

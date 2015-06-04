@@ -45,17 +45,17 @@
 
     <item
         android:id="@+id/mnemonic_action_delete_test_grup"
-        android:icon="@drawable/ic_action_cancel_delete"
+        android:icon="@drawable/ic_action_delete"
         android:onClick="deleteTestGroup"
         android:orderInCategory="600"
         android:showAsAction="never"
         android:title="@string/action_delete_test_group"/>
 
     <item
-        android:icon="@drawable/ic_action_browse"
-        android:onClick="browse"
+        android:icon="@drawable/ic_action_add"
+        android:onClick="addTestGroup"
         android:orderInCategory="700"
         android:showAsAction="never"
-        android:title="@string/action_browse"/>
+        android:title="@string/action_add_test_group"/>
 
 </menu>

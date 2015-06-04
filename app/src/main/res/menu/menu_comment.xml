@@ -6,14 +6,14 @@
     <group>
 
         <item
-            android:icon="@drawable/ic_action_cancel_delete"
+            android:icon="@drawable/ic_action_clear"
             android:onClick="cancelDelete"
             android:orderInCategory="100"
             android:showAsAction="ifRoom"
-            android:title="@string/action_cancel_delete"/>
+            android:title="@string/action_clear"/>
 
         <item
-            android:icon="@drawable/ic_action_apply"
+            android:icon="@drawable/ic_action_done"
             android:onClick="apply"
             android:orderInCategory="200"
             android:showAsAction="ifRoom"
