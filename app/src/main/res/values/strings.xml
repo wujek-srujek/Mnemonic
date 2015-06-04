@@ -18,6 +18,8 @@
     <string name="default_test_name">&lt;Unnamed test&gt;</string>
     <string name="import_error">Problems occurred, data not imported</string>
     <string name="multitest_mode_title">%d selected</string>
+    <string name="test_disabled">Disabled</string>
+    <string name="undo">Undo</string>
     <string name="question">Question</string>
     <string name="answer">Answer</string>
     <string name="info">Info</string>

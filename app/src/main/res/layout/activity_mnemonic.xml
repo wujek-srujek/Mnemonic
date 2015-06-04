@@ -17,40 +17,46 @@
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar">
 
-        <RelativeLayout
+        <android.support.design.widget.CoordinatorLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.mnemonic.view.recycler.HorizontallySwipeableRecyclerView
-                android:id="@+id/test_list"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scrollbars="vertical"/>
+                android:layout_height="match_parent">
 
-            <TextView
-                android:id="@+id/empty_test_list_info_label"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:padding="@dimen/spacing_big"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:visibility="gone"/>
+                <com.mnemonic.view.recycler.HorizontallySwipeableRecyclerView
+                    android:id="@+id/test_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="vertical"/>
 
-            <!-- TODO: remove borderWidth workaround when design library is fixed -->
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/start_multitest_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginBottom="@dimen/spacing_big"
-                android:layout_marginEnd="@dimen/spacing_big"
-                android:onClick="startMultitest"
-                android:src="@drawable/ic_action_multitest"
-                android:visibility="gone"
-                app:borderWidth="0dp"/>
+                <TextView
+                    android:id="@+id/empty_test_list_info_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:padding="@dimen/spacing_big"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:visibility="gone"/>
 
-        </RelativeLayout>
+                <!-- TODO: remove borderWidth workaround when design library is fixed -->
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/start_multitest_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginBottom="@dimen/spacing_big"
+                    android:layout_marginEnd="@dimen/spacing_big"
+                    android:onClick="startMultitest"
+                    android:src="@drawable/ic_action_multitest"
+                    android:visibility="gone"
+                    app:borderWidth="0dp"/>
+
+            </RelativeLayout>
+
+        </android.support.design.widget.CoordinatorLayout>
 
         <RelativeLayout
             android:layout_width="280dp"

@@ -19,7 +19,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -27,6 +29,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.Menu;
@@ -34,7 +37,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.mnemonic.db.DbHelper;
@@ -107,6 +109,16 @@ public class MnemonicActivity extends Activity {
 
     private ActionMode.Callback multitestModeCallback;
 
+    private int snackbarBackgroundColor;
+
+    private Snackbar currentSnackbar;
+
+    private Test lastDisabledTest;
+
+    private int lastDisabledTestPosition = -1;
+
+    private View.OnClickListener reenableTestClickListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -167,8 +179,10 @@ public class MnemonicActivity extends Activity {
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        Test test = testListAdapter.getItem(position);
-                        dbHelper.setTestEnabled(test, false);
+                        lastDisabledTest = testListAdapter.getItem(position);
+                        lastDisabledTestPosition = position;
+
+                        dbHelper.setTestEnabled(lastDisabledTest, false);
                         dbHelper.refreshTestGroup(currentTestGroup);
 
                         // deleting the item will trigger recycler view animations
@@ -209,18 +223,35 @@ public class MnemonicActivity extends Activity {
 
             @Override
             public void onRemoveFinished(RecyclerView.ViewHolder item) {
-                // at this point, the remove animation is done
-                // reset the view after it is removed to be eligible for reuse
-                item.itemView.setAlpha(1.F);
-                item.itemView.setTranslationX(0.F);
+                // this method might be called when test are removed while all tests are being enabled
+                // I guess the algorithm there invokes removals
+                // we want to run some code only when we really removed the test by swiping it away
+                boolean swipeRemoved = item.itemView.getTranslationX() != 0;
 
-                // when all animations are done, refresh the test list views if necessary
-                if (testListAdapter.getItemCount() == 0) {
+                if (swipeRemoved) {
+                    // at this point, the remove animation is done
+                    // reset the view after it is removed to be eligible for reuse
+                    item.itemView.setAlpha(1.F);
+                    item.itemView.setTranslationX(0.F);
+
+                    // when all animations are done, refresh the test list views if necessary
+                    if (testListAdapter.getItemCount() == 0) {
+                        isRunning(new ItemAnimatorFinishedListener() {
+
+                            @Override
+                            public void onAnimationsFinished() {
+                                showEmptyTestListMessage(R.string.all_tests_disabled_in_test_group);
+                            }
+                        });
+                    }
+
+                    // after all animations (most likely moves) are done, show a snackbar
+                    // to allow undoing the operation
                     isRunning(new ItemAnimatorFinishedListener() {
 
                         @Override
                         public void onAnimationsFinished() {
-                            showEmptyTestListMessage(R.string.all_tests_disabled_in_test_group);
+                            showSnackbar(getString(R.string.test_disabled), getString(R.string.undo), reenableTestClickListener);
                         }
                     });
                 }
@@ -271,6 +302,8 @@ public class MnemonicActivity extends Activity {
                 boolean selected = (Boolean.TRUE == extra);
                 if (!selected) {
                     // new group clicked
+                    dismissSnackbar();
+
                     dbHelper.markTestGroupCurrent(item);
                     currentTestGroup = item;
                     testGroupListAdapter.getExtras().setExclusive(position, Boolean.TRUE);
@@ -342,6 +375,27 @@ public class MnemonicActivity extends Activity {
                 testListAdapter.getExtras().clearAll();
 
                 startMultitestButton.setVisibility(View.GONE);
+            }
+        };
+
+        TypedValue value = new TypedValue();
+        getTheme().resolveAttribute(R.attr.colorPrimary, value, true);
+        snackbarBackgroundColor = value.data;
+
+        reenableTestClickListener = new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // disable swiping while the undo is being processed
+                testList.setSwipingEnabled(false);
+
+                dbHelper.setTestEnabled(lastDisabledTest, true);
+                dbHelper.refreshTestGroup(currentTestGroup);
+
+                testListAdapter.addItem(lastDisabledTestPosition, lastDisabledTest);
+
+                lastDisabledTest = null;
+                lastDisabledTestPosition = -1;
             }
         };
 
@@ -561,6 +615,8 @@ public class MnemonicActivity extends Activity {
     }
 
     public void enableAllTests(MenuItem menuItem) {
+        dismissSnackbar();
+
         // disable swiping while adds/moves are being processed
         testList.setSwipingEnabled(false);
 
@@ -711,7 +767,7 @@ public class MnemonicActivity extends Activity {
             newlyAddedTestGroup = new Importer(dbHelper).importTestGroup(name, inputStream);
         } catch (IOException | ImportException e) {
             Log.e(TAG, "error importing data", e);
-            Toast.makeText(MnemonicActivity.this, R.string.import_error, Toast.LENGTH_LONG).show();
+            showSnackbar(getString(R.string.import_error), null, null);
         }
     }
 
@@ -771,7 +827,7 @@ public class MnemonicActivity extends Activity {
 
     private void start(ArrayList<Task> tasks, int pagesCount) {
         if (tasks.isEmpty()) {
-            Toast.makeText(this, getString(R.string.no_tasks), Toast.LENGTH_LONG).show();
+            showSnackbar(getString(R.string.no_tasks), null, null);
             if (multitestMode == null) {
                 // single test was started
                 testListAdapter.getExtras().clearAll();
@@ -783,6 +839,22 @@ public class MnemonicActivity extends Activity {
             intent.putExtra(TestActivity.RANDOMIZE_EXTRA, true);
 
             startActivity(intent);
+        }
+    }
+
+    private void showSnackbar(@NonNull String text, @Nullable String actionText, @Nullable View.OnClickListener actionListener) {
+        currentSnackbar = Snackbar.make(testList, text, Snackbar.LENGTH_LONG);
+        currentSnackbar.setAction(actionText, actionListener);
+        currentSnackbar.getView().setBackgroundColor(snackbarBackgroundColor);
+        currentSnackbar.show();
+        // TODO: it would be perfect to get a callback when the snackbar is dismissed automatically
+        // TODO: so that the saved snackbar reference and the disabled test are cleared
+    }
+
+    private void dismissSnackbar() {
+        if (currentSnackbar != null) {
+            currentSnackbar.dismiss();
+            currentSnackbar = null;
         }
     }
 }
