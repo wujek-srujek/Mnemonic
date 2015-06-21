@@ -50,8 +50,7 @@ public class Importer {
         Test currentTest = null;
 
         boolean taskStarted = false;
-        String question = null;
-        String answer = null;
+        StringBuilder taskLineBuilder = new StringBuilder(200);
 
         String originalLine;
         String trimmedLine;
@@ -63,7 +62,7 @@ public class Importer {
 
             if (trimmedLine.isEmpty()) {
                 if (taskStarted) {
-                    dbHelper.addTask(currentTest, question, answer);
+                    addTask(currentTest, taskLineBuilder);
                     taskStarted = false;
                 }
                 currentTest = null;
@@ -75,72 +74,92 @@ public class Importer {
                 // test header encountered
                 // finish previous task, if any
                 if (taskStarted) {
-                    dbHelper.addTask(currentTest, question, answer);
+                    addTask(currentTest, taskLineBuilder);
                 }
 
-                // test header encountered, try to extract the name and description
-                String name;
-                String description;
-
-                String header = trimmedLine.substring(1).trim();
-                String[] tokens = SPLITTER_PATTERN.split(header, 2);
-                switch (tokens.length) {
-                    case 1:
-                        name = tokens[0].trim();
-                        description = null;
-                        break;
-
-                    default:
-                        name = tokens[0].trim();
-                        description = tokens[1].trim();
-                        break;
-                }
-
-                if (name.isEmpty()) {
-                    name = null;
-                }
-                if (description != null && description.isEmpty()) {
-                    description = null;
-                }
-                currentTest = dbHelper.addTest(testGroup, name, description);
+                currentTest = addTest(testGroup, trimmedLine.substring(1).trim());
                 taskStarted = false;
             } else {
                 // task started
                 if (currentTest == null) {
                     // first task in a test without header
-                    currentTest = dbHelper.addTest(testGroup, null, null);
+                    currentTest = addTest(testGroup, null);
                     taskStarted = false;
                 }
 
                 if (Character.isWhitespace(originalLine.codePointAt(0)) && taskStarted) {
-                    // continuation of the previous task's answer
-                    answer += "\n" + trimmedLine;
+                    // continuation of the previous task's line
+                    taskLineBuilder.append("\n").append(trimmedLine);
                 } else {
                     // first line in test (leniently allow leading whitespace) or any other task line
                     // finish previous task, if any
                     if (taskStarted) {
-                        dbHelper.addTask(currentTest, question, answer);
+                        addTask(currentTest, taskLineBuilder);
                     }
 
                     taskStarted = true;
-                    String[] tokens = SPLITTER_PATTERN.split(trimmedLine, 2);
-                    switch (tokens.length) {
-                        case 1:
-                            question = tokens[0].trim();
-                            answer = null;
-                            break;
-
-                        default:
-                            question = tokens[0].trim();
-                            answer = tokens[1].trim();
-                            break;
-                    }
+                    taskLineBuilder.append(trimmedLine);
                 }
             }
         }
         // finish the last task, if any
         if (taskStarted) {
-            dbHelper.addTask(currentTest, question, answer);
+            addTask(currentTest, taskLineBuilder);
         }
+    }
+
+    private Test addTest(TestGroup testGroup, String testHeader) {
+        String name;
+        String description;
+
+        if (testHeader == null) {
+            name = null;
+            description = null;
+        } else {
+            String[] tokens = SPLITTER_PATTERN.split(testHeader, 2);
+            switch (tokens.length) {
+                case 1:
+                    name = tokens[0].trim();
+                    description = null;
+                    break;
+
+                default:
+                    name = tokens[0].trim();
+                    description = tokens[1].trim();
+                    break;
+            }
+
+            if (name.isEmpty()) {
+                name = null;
+            }
+            if (description != null && description.isEmpty()) {
+                description = null;
+            }
+        }
+
+        return dbHelper.addTest(testGroup, name, description);
+    }
+
+    private void addTask(Test test, StringBuilder taskLineBuilder) {
+        String taskLine = taskLineBuilder.toString();
+        taskLineBuilder.setLength(0);
+
+        String question;
+        String answer;
+
+        String[] tokens = SPLITTER_PATTERN.split(taskLine, 2);
+        switch (tokens.length) {
+            case 1:
+                question = tokens[0].trim();
+                answer = null;
+                break;
+
+            default:
+                question = tokens[0].trim();
+                answer = tokens[1].trim();
+                break;
+        }
+
+        dbHelper.addTask(test, question, answer);
     }
 }
